@@ -37,7 +37,7 @@ public class LoginController {
     public UserDTO authentication(HttpServletRequest request, @RequestBody CredentialsDTO credentials) {
         try {
             UserDetails userDetails = userService.loadUserByUsername(credentials.getUsername());
-            System.out.println(encoder.encode(credentials.getPassword()));
+//            String newPassword = encoder.encode("12345");
             if (encoder.matches(credentials.getPassword(), userDetails.getPassword())) {
                 String token = jwtSerivce.generatorToken(userDetails);
                 httpSessionService.addNewSession(request, userDetails, token);
@@ -52,12 +52,9 @@ public class LoginController {
     @GetMapping(value = "/logout", produces = "text/plain")
     public ResponseEntity<String> logout(HttpServletRequest request) {
         try {
-            System.out.println("LOGOUT");
-            System.out.println("key session: " + request.getSession().getId());
             httpSessionService.invalideSession(request.getSession().getId());
             return ResponseEntity.ok().body("Sessão fechada com sucesso!");
         } catch (Exception e) {
-            System.out.println("Error: " + e);
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.toString());
         }
     }
