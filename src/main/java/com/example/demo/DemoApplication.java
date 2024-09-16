@@ -30,6 +30,7 @@ public class DemoApplication implements CommandLineRunner {
 		User u = new User();
 		u.setId(1L);
 		u.setName("admin");
+		u.setActive(1);
 		u.setPassword("$2a$10$WMwGGHmwDwBDlm6592NmPuZpLKTmX/l.7iV8jwyiuViC80Ho3JbIq");
 		Set<Roles> r = new HashSet();
 		Roles r1 = new Roles();
