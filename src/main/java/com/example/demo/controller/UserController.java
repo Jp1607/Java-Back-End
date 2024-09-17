@@ -1,13 +1,11 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.UserDTO;
-import com.example.demo.entities.Product;
+import com.example.demo.dto.UserLoginDTO;
 import com.example.demo.entities.User;
 import com.example.demo.repository.UserRepository;
-import com.example.demo.session.UserService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -15,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/users")
@@ -48,14 +47,20 @@ public class UserController {
                 }
             } else {
 
-                List<User> users = userRepository.findAll();
+//                UserDTO usersDTO = mapper.convertValue(userRepository.findAll(), UserDTO.class);
+//                System.out.println(usersDTO);
+//                List<User> users = userRepository.findAll();
+//                json = mapper.writeValueAsString(users);
+
+                List<UserDTO> users = userRepository.findAll().stream().map(UserDTO::new).collect(Collectors.toList());
                 json = mapper.writeValueAsString(users);
             }
 
             return ResponseEntity.status(status).body(json);
         } catch (Exception e) {
 
-            return ResponseEntity.status(404).body("Usuário não encontrado");
+            e.printStackTrace();
+            return ResponseEntity.status(404).body("Usuários não encontrado");
         }
     }
 
@@ -84,41 +89,59 @@ public class UserController {
 //    }
 
     @PostMapping(value = "", produces = "text/plain")
-    public ResponseEntity<String> saveUser(String name, CharSequence password) {
+    public ResponseEntity<String> saveUser(@RequestBody User user) {
 
         try {
 
-            ObjectMapper mapper = new ObjectMapper();
-            User user = new User();
+            if (userRepository.findByName(user.getName()).isEmpty()) {
 
-            user.setName(name);
-            user.setPassword(encoder.encode(password));
-            user.setActive(1);
+                ObjectMapper mapper = new ObjectMapper();
 
-            User u = userRepository.save(user);
-            UserDTO convertedUser = mapper.convertValue(u, UserDTO.class);
-            return ResponseEntity.status(200).body(convertedUser.toString());
-        } catch (Exception e) {
+                user.setPassword(encoder.encode(user.getPassword()));
+                user.setActive(1);
 
-            return ResponseEntity.status(404).body("Falha ao salvar o usuário" + e);
-        }
+                User u = userRepository.save(user);
+                UserDTO convertedUser = new UserDTO(u);
 
-    }
-
-    @PutMapping(value = "", produces = "text/plain")
-    public ResponseEntity<String> editUser(@RequestBody User user) {
-
-        try {
-            if (user.getActive() == 1) {
-
-                user.setActive(0);
-            userRepository.save(user);
-            return ResponseEntity.status(202).body("Usuário desativado com sucesso");
+                return ResponseEntity.status(200).body("Sucesso ao salvar o usuário " + convertedUser.toString());
             } else {
 
-                user.setActive(1);
-            userRepository.save(user);
-            return ResponseEntity.status(202).body("Usuário ativado com sucesso");
+                return ResponseEntity.status(500).body("O usuário " + user.getName() + " já existe");
+            }
+
+        } catch (Exception e) {
+
+            return ResponseEntity.status(400).body("Falha ao salvar o usuário " + e);
+        }
+    }
+
+    @PutMapping(value = "/{id}", produces = "text/plain")
+    public ResponseEntity<String> editUser(@PathVariable(required = true) long id) {
+
+        try {
+
+            User user;
+            Optional<User> toValidate = userRepository.findById(id);
+
+            if (toValidate.isPresent()) {
+
+                user = toValidate.get();
+                if (user.getActive() == 1) {
+
+                    user.setActive(0);
+                    userRepository.save(user);
+
+                    return ResponseEntity.status(202).body("Usuário desativado com sucesso");
+                } else {
+
+                    user.setActive(1);
+                    userRepository.save(user);
+
+                    return ResponseEntity.status(202).body("Usuário ativado com sucesso");
+                }
+            } else {
+
+                return ResponseEntity.status(404).body("Usuário com ID: " + id + " não encontrado! ");
             }
         } catch (Exception e) {
 

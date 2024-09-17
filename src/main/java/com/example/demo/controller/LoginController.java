@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.CredentialsDTO;
-import com.example.demo.dto.UserDTO;
+import com.example.demo.dto.UserLoginDTO;
 import com.example.demo.session.HttpSessioParam;
 import com.example.demo.session.HttpSessionService;
 import com.example.demo.session.JwtSerivce;
@@ -34,14 +34,14 @@ public class LoginController {
     private JwtSerivce jwtSerivce;
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
-    public UserDTO authentication(HttpServletRequest request, @RequestBody CredentialsDTO credentials) {
+    public UserLoginDTO authentication(HttpServletRequest request, @RequestBody CredentialsDTO credentials) {
         try {
             UserDetails userDetails = userService.loadUserByUsername(credentials.getUsername());
 //            String newPassword = encoder.encode("12345");
             if (encoder.matches(credentials.getPassword(), userDetails.getPassword())) {
                 String token = jwtSerivce.generatorToken(userDetails);
                 httpSessionService.addNewSession(request, userDetails, token);
-                return new UserDTO(userDetails.getUsername(), token, userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.toList()));
+                return new UserLoginDTO(userDetails.getUsername(), token, userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.toList()));
             }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha inválida");
         } catch (Exception e) {

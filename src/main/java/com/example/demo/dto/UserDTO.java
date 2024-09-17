@@ -1,21 +1,32 @@
 package com.example.demo.dto;
 
+import com.example.demo.entities.User;
 import com.fasterxml.jackson.annotation.JsonView;
 
-import java.util.List;
-
 public class UserDTO {
+
+    @JsonView
+    private Long id;
     @JsonView
     private String name;
+//    @JsonView
+//    private List<Roles> roles = new ArrayList<>();
     @JsonView
-    private String token;
-    @JsonView
-    private List<String> roles;
+    private Boolean active;
 
-    public UserDTO(String name, String token, List<String> roles) {
-        this.name = name;
-        this.token = token;
-        this.roles = roles;
+    public UserDTO(User user) {
+        this.id = user.getId();
+        this.name = user.getName();
+        this.active = user.getActive() == 1;
+//        this.roles = new ArrayList<>(user.getRole());
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {
@@ -26,19 +37,19 @@ public class UserDTO {
         this.name = name;
     }
 
-    public String getToken() {
-        return token;
+    public Boolean getActive() {
+        return active;
     }
 
-    public void setToken(String token) {
-        this.token = token;
+    public void setActive(Boolean active) {
+        this.active = active;
     }
 
-    public List<String> getRoles() {
-        return roles;
-    }
-
-    public void setRoles(List<String> roles) {
-        this.roles = roles;
-    }
+    //    public List<Roles> getRoles() {
+//        return roles;
+//    }
+//
+//    public void setRoles(List<Roles> roles) {
+//        this.roles = roles;
+//    }
 }

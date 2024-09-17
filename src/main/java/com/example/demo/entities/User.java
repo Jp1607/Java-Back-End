@@ -35,7 +35,12 @@ public class User implements UserDetails {
     public void setName(String name) { this.name = name; }
 
     @Override
-    public Collection<? extends GrantedAuthority> getAuthorities() { return this.roles.stream().map(e -> new SimpleGrantedAuthority(e.getName())).collect(Collectors.toList()); }
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        if (this.roles == null) {
+            return null;
+        }
+        return this.roles.stream().map(e -> new SimpleGrantedAuthority(e.getName())).collect(Collectors.toList());
+    }
     public String getPassword() { return password; }
     @Override
     public String getUsername() { return this.name; }
