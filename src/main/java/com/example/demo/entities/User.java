@@ -11,11 +11,7 @@ import java.util.stream.Collectors;
 @Entity
 @Table(name = "users")
 
-public class User implements UserDetails {
-    @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
-
-    @Column(name = "id")
-    private Long id;
+public class User extends DefaultEntities implements UserDetails {
 
     @Column(name = "name", unique = true)
     private String name;
@@ -23,14 +19,9 @@ public class User implements UserDetails {
     @Column(name = "password")
     private String password;
 
-    @Column(name = "active", nullable = false, length = 1)
-    private Integer active;
-
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Roles> roles;
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
@@ -55,6 +46,4 @@ public class User implements UserDetails {
     public void setPassword(String password) { this.password = password; }
     public Set<Roles> getRole() { return roles; }
     public void setRoles(Set<Roles> roles) { this.roles = roles; }
-    public Integer getActive() {return active;}
-    public void setActive(Integer active) {this.active = active;}
 }

@@ -52,7 +52,7 @@ public class ProductController {
         }
     }
 
-    @PutMapping(value = "", produces = "text/plain")
+    @PutMapping(value = "/edit", produces = "text/plain")
     public ResponseEntity<String> editProduct(HttpServletRequest request, @RequestBody Product product) {
 
         try {
@@ -67,6 +67,29 @@ public class ProductController {
         } catch (Exception e) {
 
             return ResponseEntity.status(404).body("Produto não encontrado");
+        }
+    }
+
+    @PutMapping(value = "/edit/{id}", produces = "text/plain")
+    public ResponseEntity<String> activateProduct(@PathVariable Long id) {
+
+        try {
+
+            Product p = repository.findById(id).get();
+
+            try {
+
+                p.setActive(p.getActive().compareTo(1) == 0 ? 0: 1);
+                repository.save(p);
+
+                return ResponseEntity.status(HttpStatus.OK).body("Estado editado com sucesso" + p.toString());
+            } catch (Exception e) {
+
+                return ResponseEntity.status(500).body("Erro ao editar estado do produto" + e);
+            }
+        } catch (Exception e) {
+
+            return ResponseEntity.status(404).body("Produto não encontrado" + e);
         }
     }
 
