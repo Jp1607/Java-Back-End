@@ -1,13 +1,17 @@
 package com.example.demo.controller;
+
 import com.example.demo.dto.ProdutoNewDTO;
+import com.example.demo.dto.UserDTO;
 import com.example.demo.entities.Product;
 import com.example.demo.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +34,10 @@ public class ProductController {
             if (id != null) {
 
                 Optional<Product> p = repository.findById(id);
-                if(p.isPresent()){
+                if (p.isPresent()) {
 
                     json = mapper.writeValueAsString(p.get());
-                }else{
+                } else {
 
                     json = "Não encontrado";
                     status = HttpStatus.NOT_FOUND;
@@ -44,7 +48,7 @@ public class ProductController {
                 json = mapper.writeValueAsString(ps);
             }
 
-                System.out.println(json);
+            System.out.println(json);
             return ResponseEntity.status(status.value()).body(json);
         } catch (Exception e) {
 
@@ -57,7 +61,7 @@ public class ProductController {
 
         try {
 
-            if(product.getId() == null || product.getId().compareTo(0L) == 0){
+            if (product.getId() == null || product.getId().compareTo(0L) == 0) {
 
                 return ResponseEntity.status(406).body("Produto sem id para edição");
             }
@@ -79,7 +83,7 @@ public class ProductController {
 
             try {
 
-                p.setActive(p.getActive().compareTo(1) == 0 ? 0: 1);
+                p.setActive(p.getActive().compareTo(1) == 0 ? 0 : 1);
                 repository.save(p);
 
                 return ResponseEntity.status(HttpStatus.OK).body("Estado editado com sucesso" + p.toString());
@@ -99,24 +103,29 @@ public class ProductController {
         try {
 
             HttpStatus status = HttpStatus.NOT_FOUND;
-            ObjectMapper mapper = new ObjectMapper();
-            Product product = mapper.convertValue(produtoNewDTO, Product.class);
-            Product p = repository.save(product);
+
+            Product convertProd = new Product(produtoNewDTO);
+            Product p = repository.save(convertProd);
+            ProdutoNewDTO returnProd = new ProdutoNewDTO(p);
+
             status = HttpStatus.OK;
 
-            return ResponseEntity.status(status.value()).body(p.getId().toString());
+            return ResponseEntity.status(status.value()).body(returnProd.toString());
         } catch (Exception e) {
 
             String error = "Problema ao salvar o produto";
-            if(e instanceof DataIntegrityViolationException){
-
+            if (e instanceof DataIntegrityViolationException) {
                 error = e.getMessage();
+                ConstraintViolationException constraintEx = (ConstraintViolationException) e.getCause();
+                if (constraintEx.getConstraintName().contains("UK")) {
+                    error = "Este código de barras já foi cadastrado no sistema.";
+                }
             }
             return ResponseEntity.status(404).body(error);
         }
     }
 
-    @DeleteMapping(value =  "/{id}", produces = "text/plain")
+    @DeleteMapping(value = "/{id}", produces = "text/plain")
     public ResponseEntity<String> deleteProduct(HttpServletRequest request, @PathVariable(required = true) Long id) {
 
         try {

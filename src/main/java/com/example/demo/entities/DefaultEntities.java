@@ -7,10 +7,10 @@ public class DefaultEntities {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
-    private Long id = 0L;
+    protected Long id = 0L;
 
     @Column(name = "active", columnDefinition="int(1)" )
-    private Integer active;
+    protected Integer active;
 
     public Long getId() {
         return id;
