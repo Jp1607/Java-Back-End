@@ -2,6 +2,7 @@ package com.example.demo.entities;
 
 
 import com.example.demo.dto.ProdutoNewDTO;
+import com.example.demo.dto.ProdutoReturnDTO;
 
 import javax.persistence.*;
 

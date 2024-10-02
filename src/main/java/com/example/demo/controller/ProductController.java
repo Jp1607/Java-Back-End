@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.ProdutoNewDTO;
+import com.example.demo.dto.ProdutoReturnDTO;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.entities.Product;
 import com.example.demo.repository.ProductRepository;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/product")
@@ -30,29 +32,34 @@ public class ProductController {
             ObjectMapper mapper = new ObjectMapper();
             String json;
             HttpStatus status = HttpStatus.OK;
-
+            System.out.println("Entrou 1");
             if (id != null) {
+                System.out.println("2");
+                Product p = repository.findById(id).get();
+                if (p != null) {
 
-                Optional<Product> p = repository.findById(id);
-                if (p.isPresent()) {
-
-                    json = mapper.writeValueAsString(p.get());
+                    ProdutoReturnDTO prod = new ProdutoReturnDTO(p);
+                    json = mapper.writeValueAsString(prod);
                 } else {
 
                     json = "Não encontrado";
                     status = HttpStatus.NOT_FOUND;
                 }
             } else {
-
-                List<Product> ps = repository.findAll();
+                System.out.println("Entrou 2");
+                List<ProdutoReturnDTO> ps = repository.findAll().
+                        stream().map(ProdutoReturnDTO::new).
+                        collect(Collectors.toList());
+                System.out.println("Entrou 3");
+                System.out.println(ps);
                 json = mapper.writeValueAsString(ps);
             }
 
             System.out.println(json);
             return ResponseEntity.status(status.value()).body(json);
         } catch (Exception e) {
-
-            return ResponseEntity.status(404).body("Produto não encontrado");
+            e.printStackTrace();
+            return ResponseEntity.status(404).body("Produto não encontrado " + e.getStackTrace());
         }
     }
 
@@ -70,7 +77,7 @@ public class ProductController {
             return ResponseEntity.ok("Produto editado com sucesso");
         } catch (Exception e) {
 
-            return ResponseEntity.status(404).body("Produto não encontrado");
+            return ResponseEntity.status(404).body("Produto não encontrado " + e);
         }
     }
 

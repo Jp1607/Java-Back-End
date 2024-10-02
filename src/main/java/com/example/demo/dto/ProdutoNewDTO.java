@@ -34,6 +34,7 @@ public class ProdutoNewDTO {
     @JsonView
     private MU mu;
 
+
     public ProdutoNewDTO(Product p) {
         this.name = p.getName();
         this.active = p.getActive() == 1;
@@ -119,4 +120,5 @@ public class ProdutoNewDTO {
     public void setMu(MU mu) {
         this.mu = mu;
     }
+
 }
