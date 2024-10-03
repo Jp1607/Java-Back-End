@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.dto.ProdutoNewDTO;
 import com.example.demo.dto.ProdutoReturnDTO;
 import com.example.demo.dto.UserDTO;
+import com.example.demo.entities.Brand;
 import com.example.demo.entities.Product;
 import com.example.demo.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -18,6 +19,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+//Product p = new Product();
+//List<Brand> brands = bc.getBrandList();
+//            brands.stream().map(brand -> {
+//        if (Objects.equals(brand.getDescription(), produtoReturnDTO.getBrandDesc())) {
+//        p.setBrand(brand);
+//                }
+//                        return null;
+//                        }).collect(Collectors.toList());
+//
+//        repository.save(p);
+
 @RestController
 @RequestMapping(value = "/product")
 public class ProductController {
@@ -32,9 +44,9 @@ public class ProductController {
             ObjectMapper mapper = new ObjectMapper();
             String json;
             HttpStatus status = HttpStatus.OK;
-            System.out.println("Entrou 1");
+
             if (id != null) {
-                System.out.println("2");
+
                 Product p = repository.findById(id).get();
                 if (p != null) {
 
@@ -46,16 +58,12 @@ public class ProductController {
                     status = HttpStatus.NOT_FOUND;
                 }
             } else {
-                System.out.println("Entrou 2");
+
                 List<ProdutoReturnDTO> ps = repository.findAll().
                         stream().map(ProdutoReturnDTO::new).
                         collect(Collectors.toList());
-                System.out.println("Entrou 3");
-                System.out.println(ps);
                 json = mapper.writeValueAsString(ps);
             }
-
-            System.out.println(json);
             return ResponseEntity.status(status.value()).body(json);
         } catch (Exception e) {
             e.printStackTrace();
@@ -72,6 +80,7 @@ public class ProductController {
 
                 return ResponseEntity.status(406).body("Produto sem id para edição");
             }
+
 
             repository.save(product);
             return ResponseEntity.ok("Produto editado com sucesso");

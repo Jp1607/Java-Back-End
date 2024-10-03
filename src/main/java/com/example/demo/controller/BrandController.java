@@ -18,6 +18,11 @@ public class BrandController {
     @Autowired
     BrandRepository repository;
 
+    public List getBrandList(){
+        List <Brand> brands = repository.findAll();
+        return brands;
+    }
+
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
     public ResponseEntity<String> getBrand(@PathVariable (required = false) Long id) {
 

@@ -38,6 +38,7 @@ public class LoginController {
         try {
             UserDetails userDetails = userService.loadUserByUsername(credentials.getUsername());
 //            String newPassword = encoder.encode("12345");
+            System.out.println(encoder);
             if (encoder.matches(credentials.getPassword(), userDetails.getPassword())) {
                 String token = jwtSerivce.generatorToken(userDetails);
                 httpSessionService.addNewSession(request, userDetails, token);
