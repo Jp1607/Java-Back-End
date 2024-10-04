@@ -43,6 +43,7 @@ public class ProdutoReturnDTO {
         this.description = p.getDescription();
         this.barCode = p.getBarCode();
         if (p.getBrand() != null) {
+            System.out.println("Brands: " + brandDesc + " " + p.toString() + p.getBrand().getDescription());
             this.brandDesc = p.getBrand().getDescription();
         }
         if (p.getGroup() != null) {

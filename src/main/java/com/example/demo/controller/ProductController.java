@@ -50,8 +50,9 @@ public class ProductController {
                 Product p = repository.findById(id).get();
                 if (p != null) {
 
-                    ProdutoReturnDTO prod = new ProdutoReturnDTO(p);
-                    json = mapper.writeValueAsString(prod);
+//                    ProdutoReturnDTO prod = new ProdutoReturnDTO(p);
+//                    System.out.println("Produtos: " + p.getBrand() + prod.getBrandDesc());
+                    json = mapper.writeValueAsString(p);
                 } else {
 
                     json = "Não encontrado";
@@ -64,6 +65,7 @@ public class ProductController {
                         collect(Collectors.toList());
                 json = mapper.writeValueAsString(ps);
             }
+            System.out.println(json);
             return ResponseEntity.status(status.value()).body(json);
         } catch (Exception e) {
             e.printStackTrace();
