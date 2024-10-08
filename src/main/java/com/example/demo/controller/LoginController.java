@@ -1,23 +1,22 @@
 package com.example.demo.controller;
 
+import com.example.demo.Enum.Activity;
 import com.example.demo.dto.CredentialsDTO;
 import com.example.demo.dto.UserLoginDTO;
-import com.example.demo.session.HttpSessioParam;
-import com.example.demo.session.HttpSessionService;
-import com.example.demo.session.JwtSerivce;
-import com.example.demo.session.UserService;
+import com.example.demo.entities.Log;
+import com.example.demo.entities.User;
+import com.example.demo.repository.LogRepository;
+import com.example.demo.session.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -32,16 +31,25 @@ public class LoginController {
     private HttpSessionService httpSessionService;
     @Autowired
     private JwtSerivce jwtSerivce;
+    @Autowired
+    private LogRepository logRepository;
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public UserLoginDTO authentication(HttpServletRequest request, @RequestBody CredentialsDTO credentials) {
         try {
             UserDetails userDetails = userService.loadUserByUsername(credentials.getUsername());
-//            String newPassword = encoder.encode("12345");
-            System.out.println(encoder);
             if (encoder.matches(credentials.getPassword(), userDetails.getPassword())) {
                 String token = jwtSerivce.generatorToken(userDetails);
-                httpSessionService.addNewSession(request, userDetails, token);
+                httpSessionService.addNewSession(request, (CustomUserDetails) userDetails, token);
+                System.out.println("ativo" + userDetails.isEnabled());
+                User u = new User();
+                u.setId(((CustomUserDetails) userDetails).getId());
+                Log log = new Log();
+                log.setUser(u);
+                log.setActivity(Activity.LOGIN);
+                log.setDate(new Date());
+                System.out.println(log.getActivity().getDescription());
+                logRepository.save(log);
                 return new UserLoginDTO(userDetails.getUsername(), token, userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.toList()));
             }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha inválida");
@@ -51,9 +59,22 @@ public class LoginController {
     }
 
     @GetMapping(value = "/logout", produces = "text/plain")
-    public ResponseEntity<String> logout(HttpServletRequest request) {
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String token, HttpServletRequest request) {
         try {
-            httpSessionService.invalideSession(request.getSession().getId());
+
+            if(token != null && token.startsWith("Bearer")){
+                String t = token.split(" ")[1];
+                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+                User u = new User();
+                u.setId(http.getUserDetails().getId());
+                Log log = new Log();
+                log.setUser(u);
+                log.setActivity(Activity.LOGOUT);
+                log.setDate(new Date());
+
+                logRepository.save(log);
+                httpSessionService.invalideSession(t);
+            }
             return ResponseEntity.ok().body("Sessão fechada com sucesso!");
         } catch (Exception e) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.toString());
@@ -65,7 +86,7 @@ public class LoginController {
         try {
             for (Map.Entry s : httpSessionService.getActiveSessions().entrySet()) {
                 System.out.println("key: " + s.getKey());
-                HttpSessioParam params = (HttpSessioParam) s.getValue();
+                HttpSessionParam params = (HttpSessionParam) s.getValue();
                 System.out.println("token: " + params.getToken());
                 System.out.println("session: " + params.getHttpSession());
                 System.out.println("session KEY: " + params.getHttpSession().getId());

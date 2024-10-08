@@ -6,6 +6,9 @@ import org.springframework.core.annotation.Order;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.Calendar;
+import java.util.Date;
+
 @Service
 public class JwtSerivce {
 
@@ -13,7 +16,14 @@ public class JwtSerivce {
     private String subscriptionKey;
 
     public String generatorToken(UserDetails user) {
-        return Jwts.builder().setSubject(user.getUsername()).signWith(SignatureAlgorithm.HS512, subscriptionKey).compact();
+        Date now = new Date();
+        Calendar calendar = Calendar.getInstance();
+        calendar.setTime(now);
+        calendar.add(Calendar.DAY_OF_MONTH, 3); // Adiciona 3 dias
+        Date expirationDate = calendar.getTime();
+        return Jwts.builder().setSubject(user.getUsername()).signWith(SignatureAlgorithm.HS512, subscriptionKey).setExpiration(
+                expirationDate
+        ).compact();
     }
 
     private Claims getClaims(String token) throws ExpiredJwtException {

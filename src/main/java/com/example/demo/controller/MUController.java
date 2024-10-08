@@ -1,19 +1,32 @@
 package com.example.demo.controller;
+import com.example.demo.Enum.Activity;
 import com.example.demo.dto.muNewDTO;
 import com.example.demo.entities.Brand;
+import com.example.demo.entities.Log;
 import com.example.demo.entities.MU;
+import com.example.demo.entities.User;
+import com.example.demo.repository.LogRepository;
 import com.example.demo.repository.MURepository;
+import com.example.demo.session.HttpSessionParam;
+import com.example.demo.session.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 @RestController
 @RequestMapping(value = "/mu")
 
 public class MUController {
+
+    @Autowired
+    private HttpSessionService httpSessionService;
+
+    @Autowired
+    private LogRepository logRepository;
 
     @Autowired
     MURepository repository;
@@ -38,13 +51,25 @@ public class MUController {
     }
 
     @PostMapping(value = "", produces = "application/json")
-    public ResponseEntity<String> postNewMU(@RequestBody muNewDTO muDTO) {
+    public ResponseEntity<String> postNewMU(@RequestHeader("Authorization") String token, @RequestBody muNewDTO muDTO) {
 
         try {
 
             MU mu = new MU(muDTO);
             MU m = repository.save(mu);
             muNewDTO retMU = new muNewDTO(m);
+
+            String t = token.split(" ")[1];
+            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+            User u = new User();
+            u.setId(http.getUserDetails().getId());
+            Log log = new Log();
+            log.setUser(u);
+            log.setActivity(Activity.NEW);
+            log.setDate(new Date());
+            log.setTableName("product_mu");
+            log.setTableId(m.getId());
+            logRepository.save(log);
 
             return ResponseEntity.status(200).body(retMU.toString());
         } catch (Exception e) {
@@ -54,7 +79,7 @@ public class MUController {
     }
 
     @PutMapping(value = "/{id}", produces = "text/plain")
-    public ResponseEntity<String> putMU(@PathVariable Long id) {
+    public ResponseEntity<String> putMU(@RequestHeader("Authorization") String token, @PathVariable Long id) {
 
         try {
 
@@ -63,6 +88,19 @@ public class MUController {
 
                 mu.setActive(mu.getActive().compareTo(1) == 0 ? 0 : 1);
                 repository.save(mu);
+
+                String t = token.split(" ")[1];
+                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+                User u = new User();
+                u.setId(http.getUserDetails().getId());
+                Log log = new Log();
+                log.setUser(u);
+                log.setActivity(Activity.DELETE);
+                log.setDate(new Date());
+                log.setTableName("product_mu");
+                log.setTableId(mu.getId());
+                logRepository.save(log);
+
                 return ResponseEntity.status(200).body("Unidade de medida alterada com sucesso");
             } else {
                 return ResponseEntity.status(404).body("Unidade de medida não encontrada");

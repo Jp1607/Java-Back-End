@@ -1,20 +1,19 @@
 package com.example.demo.session;
 
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.servlet.http.HttpSession;
 
-public class HttpSessioParam {
+public class HttpSessionParam {
 
     private HttpSession httpSession;
     private Authentication authentication;
-    private UserDetails userDetails;
+    private CustomUserDetails userDetails;
     private String token;
     private Long timeExpiration = 0L;
     private Long timeCreation = 0L;
 
-    public HttpSessioParam(HttpSession httpSession, Authentication authentication, String token, Long dataExpiration, Long dataCreated, UserDetails userDetails) {
+    public HttpSessionParam(HttpSession httpSession, Authentication authentication, String token, Long dataExpiration, Long dataCreated, CustomUserDetails userDetails) {
         this.httpSession = httpSession;
         this.authentication = authentication;
         this.token = token;
@@ -23,7 +22,7 @@ public class HttpSessioParam {
         this.userDetails = userDetails;
     }
 
-    public HttpSessioParam(HttpSessioParam h) {
+    public HttpSessionParam(HttpSessionParam h) {
         this.httpSession = h.httpSession;
         this.authentication = h.authentication;
         this.token = h.token;
@@ -32,7 +31,7 @@ public class HttpSessioParam {
         this.userDetails = h.userDetails;
     }
 
-    public HttpSessioParam() {
+    public HttpSessionParam() {
     }
 
     public HttpSession getHttpSession() {
@@ -75,11 +74,11 @@ public class HttpSessioParam {
         this.timeCreation = timeCreation;
     }
 
-    public UserDetails getUserDetails() {
+    public CustomUserDetails getUserDetails() {
         return userDetails;
     }
 
-    public void setUserDetails(UserDetails userDetails) {
+    public void setUserDetails(CustomUserDetails userDetails) {
         this.userDetails = userDetails;
     }
 }

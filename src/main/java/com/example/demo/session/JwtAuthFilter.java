@@ -5,9 +5,7 @@ import com.example.demo.exceptions.SessionExpired;
 import com.example.demo.exceptions.unAuthenticated;
 import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.annotation.Order;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -16,7 +14,6 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Objects;
 
 @Service
 public class JwtAuthFilter extends OncePerRequestFilter {
@@ -36,19 +33,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 filterChain.doFilter(request, response);
                 return;
             }
+
             System.out.println("1");
             if (authorization != null && authorization.startsWith("Bearer")) {
                 String token = authorization.split(" ")[1];
-                if (httpSessionService.isValidSession(token)) {
-                    System.out.println("2");
-                    HttpSessioParam httpSessioParam = httpSessionService.getHttpSessionParam(token);
-                    if (jwtSerivce.validadtionToken(token, httpSessioParam.getToken())) {
-                        System.out.println("3");
-                        httpSessionService.setCalculeteTimeSession(token);
-                        SecurityContextHolder.getContext().setAuthentication(httpSessioParam.getAuthentication());
-                    }
-                }else{
-                    throw new unAuthenticated("Usuário não autenticado!");
+                HttpSessionParam httpSessionParam = httpSessionService.getHttpSessionParam(token);
+                System.out.println("porra"+ httpSessionParam.getUserDetails().getId());
+                System.out.println("2");
+                if (jwtSerivce.validadtionToken(token, httpSessionParam.getToken())) {
+                    System.out.println("3");
+                    httpSessionService.setCalculeteTimeSession(token);
+                    SecurityContextHolder.getContext().setAuthentication(httpSessionParam.getAuthentication());
                 }
             } else {
                 throw new unAuthenticated("Usuário não autenticado!");

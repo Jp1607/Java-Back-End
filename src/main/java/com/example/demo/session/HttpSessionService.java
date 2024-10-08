@@ -1,15 +1,11 @@
 package com.example.demo.session;
 
 import com.example.demo.exceptions.InvalidSession;
-import com.example.demo.exceptions.SessionExpired;
-import com.example.demo.exceptions.unAuthenticated;
 import com.example.demo.resources.CalculeteTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
-import org.springframework.web.context.request.RequestContextHolder;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
@@ -21,94 +17,70 @@ public class HttpSessionService {
 
     @Autowired
     private CalculeteTime calculeteTime;
-    private Map<String, HttpSessioParam> sessions = new HashMap<>();
+    private Map<String, HttpSessionParam> sessions = new HashMap<>();
 
-    public List<HttpSessioParam> getActiveSessionsParams() {
+    public List<HttpSessionParam> getActiveSessionsParams() {
         return new ArrayList<>(sessions.values());
     }
 
-    public Map<String, HttpSessioParam> getActiveSessions() {
+    public Map<String, HttpSessionParam> getActiveSessions() {
         return sessions;
     }
 
-    public void addNewSession(HttpServletRequest request, UserDetails userDetails, String token) {
-//        isAuthenticated(userDetails.getUsername());
-        UsernamePasswordAuthenticationToken user = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-        user.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-        HttpSessioParam httpSessioParam = new HttpSessioParam(request.getSession(), user, token, calculeteTime.calcTimeToExpire(), calculeteTime.now(), userDetails);
-        SecurityContextHolder.getContext().setAuthentication(httpSessioParam.getAuthentication());
-        String a = RequestContextHolder.currentRequestAttributes().getSessionId();
-        sessions.put(token, httpSessioParam);
+    public void addNewSession(HttpServletRequest request, CustomUserDetails userDetails, String token) {
+        isAuthenticated(userDetails.getUsername());
+
+        UsernamePasswordAuthenticationToken user =
+                new UsernamePasswordAuthenticationToken
+                        (userDetails, null, userDetails.getAuthorities());
+
+        user.setDetails
+                (new WebAuthenticationDetailsSource().buildDetails(request));
+
+        HttpSessionParam httpSessionParam =
+                new HttpSessionParam
+                        (request.getSession(), user, token, calculeteTime.
+                                calcTimeToExpire(), calculeteTime.now(), userDetails);
+
+        SecurityContextHolder.getContext().
+                setAuthentication(httpSessionParam.getAuthentication());
+        sessions.put(token, httpSessionParam);
     }
 
-//    private void isAuthenticated(String username) {
-//        for (HttpSessioParam http : sessions.values()) {
-//            if (http.getUserDetails().getUsername().equals(username)) {
-//                System.out.println("Usuario " + username + " foi logado em outro lugar!");
-//                invalideSession(http.getHttpSession().getId());
-//                break;
-//            }
-//        }
-//    }
-
-    public void setSessession(HttpServletRequest request, UserDetails userDetails, String token) {
-        HttpSessioParam httpSessioParam;
-        if (isSessionActive(request.getSession().getId())) {
-            UsernamePasswordAuthenticationToken user = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
-            user.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-            httpSessioParam = new HttpSessioParam(request.getSession(), user, token, calculeteTime.calcTimeToExpire(), sessions.get(request.getSession().getId()).getTimeCreation(), userDetails);
-            SecurityContextHolder.getContext().setAuthentication(httpSessioParam.getAuthentication());
-            sessions.put(request.getSession().getId(), httpSessioParam);
+    private void isAuthenticated(String username) {
+        for (HttpSessionParam http : sessions.values()) {
+            if (http.getUserDetails().getUsername().equals(username)) {
+                invalideSession(http.getToken());
+                break;
+            }
         }
     }
 
-    public void setCalculeteTimeSession(String key) {
-        if (isSessionActive(key)) {
-            Long oldTime = sessions.get(key).getTimeExpiration();
-            sessions.get(key).setTimeExpiration(calculeteTime.calcTimeToExpire(oldTime));
-        }
-    }
-
-    public HttpSessioParam getActiveSession(String key) {
-        return sessions.get(key);
-    }
-
-    public boolean isSessionActive(String key) {
-        return sessions.containsKey(key);
-    }
-
-    public boolean isValidSession(String token) throws SessionExpired, unAuthenticated, InvalidSession {
+    public void setCalculeteTimeSession(String token) {
         if (isSessionActive(token)) {
-            Long timeExpiration = sessions.get(token).getTimeExpiration();
-            if (calculeteTime.now().compareTo(timeExpiration) == 1) {
-                sessions.get(token).getHttpSession().invalidate();
-                sessions.get(token).getAuthentication().setAuthenticated(false);
-                throw new SessionExpired("Sessão expirou!");
-            }
-            if (!sessions.get(token).getAuthentication().isAuthenticated()) {
-                throw new unAuthenticated("Usuário não autenticado!");
-            }
-            return true;
-        } else {
-            throw new InvalidSession("Sessão invalida ou não iniciada!");
+            Long oldTime = sessions.get(token).getTimeExpiration();
+            sessions.get(token).setTimeExpiration(calculeteTime.calcTimeToExpire(oldTime));
         }
     }
 
-    public void invalideSession(String key) throws InvalidSession {
-        if (isSessionActive(key)) {
+    public boolean isSessionActive(String id) {
+        return sessions.containsKey(id);
+    }
+
+    public void invalideSession(String token) throws InvalidSession {
+        if (isSessionActive(token)) {
             try {
-                sessions.get(key).getHttpSession().invalidate();
+                sessions.get(token).getHttpSession().invalidate();
             } catch (Exception e) {
                 System.out.println("Sessão já está invalidada");
             }
-            sessions.remove(key);
-            System.out.println("Quantidade de sessões ativas: " + sessions.size());
+            sessions.remove(token);
         } else {
             throw new InvalidSession("Sessão invalida ou não iniciada!");
         }
     }
 
-    public HttpSessioParam getHttpSessionParam(String key) throws InvalidSession {
+    public HttpSessionParam getHttpSessionParam(String key) throws InvalidSession {
         if (isSessionActive(key)) {
             return sessions.get(key);
         }

@@ -1,9 +1,15 @@
 package com.example.demo.controller;
 
+import com.example.demo.Enum.Activity;
 import com.example.demo.dto.UserDTO;
 import com.example.demo.dto.UserLoginDTO;
+import com.example.demo.entities.Log;
 import com.example.demo.entities.User;
+import com.example.demo.repository.LogRepository;
+import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.session.HttpSessionParam;
+import com.example.demo.session.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -11,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -18,6 +25,12 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping(value = "/users")
 public class UserController {
+
+    @Autowired
+    private HttpSessionService httpSessionService;
+
+    @Autowired
+    private LogRepository logRepository;
 
     @Autowired
     private PasswordEncoder encoder;
@@ -89,7 +102,7 @@ public class UserController {
 //    }
 
     @PostMapping(value = "", produces = "text/plain")
-    public ResponseEntity<String> saveUser(@RequestBody User user) {
+    public ResponseEntity<String> saveUser(@RequestHeader("Authorization") String token, @RequestBody User user) {
 
         try {
 
@@ -102,6 +115,17 @@ public class UserController {
 
                 User u = userRepository.save(user);
                 UserDTO convertedUser = new UserDTO(u);
+
+                String t = token.split(" ")[1];
+                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+                u.setId(http.getUserDetails().getId());
+                Log log = new Log();
+                log.setUser(u);
+                log.setActivity(Activity.NEW);
+                log.setDate(new Date());
+                log.setTableName("user");
+                log.setTableId(u.getId());
+                logRepository.save(log);
 
                 return ResponseEntity.status(200).body("Sucesso ao salvar o usuário " + convertedUser.toString());
             } else {
@@ -116,7 +140,7 @@ public class UserController {
     }
 
     @PutMapping(value = "/{id}", produces = "text/plain")
-    public ResponseEntity<String> editUser(@PathVariable(required = true) long id) {
+    public ResponseEntity<String> editUser(@RequestHeader("Authorization") String token, @PathVariable(required = true) long id) {
 
         try {
 
@@ -126,19 +150,42 @@ public class UserController {
             if (toValidate.isPresent()) {
 
                 user = toValidate.get();
-                if (user.getActive() == 1) {
+
 
                     user.setActive(0);
                     userRepository.save(user);
 
+                    String t = token.split(" ")[1];
+                    HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+                    user.setId(http.getUserDetails().getId());
+                    Log log = new Log();
+                    log.setUser(user);
+                    log.setActivity(Activity.NEW);
+                    log.setDate(new Date());
+                    log.setTableName("user");
+                    log.setTableId(user.getId());
+                    logRepository.save(log);
+
                     return ResponseEntity.status(202).body("Usuário desativado com sucesso");
-                } else {
 
-                    user.setActive(1);
-                    userRepository.save(user);
-
-                    return ResponseEntity.status(202).body("Usuário ativado com sucesso");
-                }
+//                else {
+//
+//                    user.setActive(1);
+//                    userRepository.save(user);
+//
+//                    String t = token.split(" ")[1];
+//                    HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//                    u.setId(http.getUserDetails().getId());
+//                    Log log = new Log();
+//                    log.setUser(u);
+//                    log.setActivity(Activity.NEW);
+//                    log.setDate(new Date());
+//                    log.setTableName("user");
+//                    log.setTableId(u.getId());
+//                    logRepository.save(log);
+//
+//                    return ResponseEntity.status(202).body("Usuário ativado com sucesso");
+//                }
             } else {
 
                 return ResponseEntity.status(404).body("Usuário com ID: " + id + " não encontrado! ");

@@ -1,44 +1,47 @@
 package com.example.demo.controller;
 
+import com.example.demo.Enum.Activity;
 import com.example.demo.dto.ProdutoNewDTO;
 import com.example.demo.dto.ProdutoReturnDTO;
-import com.example.demo.dto.UserDTO;
 import com.example.demo.entities.Brand;
+import com.example.demo.entities.Log;
 import com.example.demo.entities.Product;
+import com.example.demo.entities.User;
+import com.example.demo.repository.LogRepository;
 import com.example.demo.repository.ProductRepository;
+import com.example.demo.session.HttpSessionParam;
+import com.example.demo.session.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.Date;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
-
-//Product p = new Product();
-//List<Brand> brands = bc.getBrandList();
-//            brands.stream().map(brand -> {
-//        if (Objects.equals(brand.getDescription(), produtoReturnDTO.getBrandDesc())) {
-//        p.setBrand(brand);
-//                }
-//                        return null;
-//                        }).collect(Collectors.toList());
-//
-//        repository.save(p);
 
 @RestController
 @RequestMapping(value = "/product")
 public class ProductController {
     @Autowired
+    private HttpSessionService httpSessionService;
+    @Autowired
     ProductRepository repository;
+    @Autowired
+    private LogRepository logRepository;
 
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
-    public ResponseEntity<String> getProduct(HttpServletRequest request, @PathVariable(required = false) Long id) {
-
+    public ResponseEntity<String> getProduct(HttpServletRequest request,
+                                             @RequestParam(value = "name", required = false) String name,
+                                             @RequestParam(value = "brandId", required = false) Long brandId,
+                                             @PathVariable(required = false) Long id) {
         try {
 
             ObjectMapper mapper = new ObjectMapper();
@@ -52,6 +55,7 @@ public class ProductController {
 
 //                    ProdutoReturnDTO prod = new ProdutoReturnDTO(p);
 //                    System.out.println("Produtos: " + p.getBrand() + prod.getBrandDesc());
+
                     json = mapper.writeValueAsString(p);
                 } else {
 
@@ -59,9 +63,25 @@ public class ProductController {
                     status = HttpStatus.NOT_FOUND;
                 }
             } else {
+                Product p = new Product();
+                p.setId(null);
+                if(name != null){
+                    p.setName(name);
+                }
+                if(brandId != null){
+                    Brand b = new Brand();
+                    b.setId(brandId);
+                    p.setBrand(b);
+                }
+                ExampleMatcher matcher = ExampleMatcher.matching()
+                        .withIgnoreNullValues()
+                        .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+                Example<Product> example = Example.of(p, matcher);
 
-                List<ProdutoReturnDTO> ps = repository.findAll().
-                        stream().map(ProdutoReturnDTO::new).
+
+                List<ProdutoReturnDTO> ps = repository.findAll(
+                                example, Sort.by("name"))
+                        .stream().map(ProdutoReturnDTO::new).
                         collect(Collectors.toList());
                 json = mapper.writeValueAsString(ps);
             }
@@ -74,7 +94,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/edit", produces = "text/plain")
-    public ResponseEntity<String> editProduct(HttpServletRequest request, @RequestBody Product product) {
+    public ResponseEntity<String> editProduct(@RequestHeader("Authorization") String token, HttpServletRequest request, @RequestBody Product product) {
 
         try {
 
@@ -83,8 +103,20 @@ public class ProductController {
                 return ResponseEntity.status(406).body("Produto sem id para edição");
             }
 
-
             repository.save(product);
+
+            String t = token.split(" ")[1];
+            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+
+            User u = new User();
+            u.setId(http.getUserDetails().getId());
+            Log log = new Log();
+            log.setUser(u);
+            log.setActivity(Activity.EDIT);
+            log.setDate(new Date());
+            log.setTableName("product");
+            log.setTableId(product.getId());
+            logRepository.save(log);
             return ResponseEntity.ok("Produto editado com sucesso");
         } catch (Exception e) {
 
@@ -93,7 +125,7 @@ public class ProductController {
     }
 
     @PutMapping(value = "/edit/{id}", produces = "text/plain")
-    public ResponseEntity<String> activateProduct(@PathVariable Long id) {
+    public ResponseEntity<String> activateProduct(@RequestHeader("Authorization") String token, @PathVariable Long id) {
 
         try {
 
@@ -103,6 +135,18 @@ public class ProductController {
 
                 p.setActive(p.getActive().compareTo(1) == 0 ? 0 : 1);
                 repository.save(p);
+
+                String t = token.split(" ")[1];
+                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+                User u = new User();
+                u.setId(http.getUserDetails().getId());
+                Log log = new Log();
+                log.setUser(u);
+                log.setActivity(Activity.DELETE);
+                log.setDate(new Date());
+                log.setTableName("product");
+                log.setTableId(p.getId());
+                logRepository.save(log);
 
                 return ResponseEntity.status(HttpStatus.OK).body("Estado editado com sucesso" + p.toString());
             } catch (Exception e) {
@@ -116,7 +160,7 @@ public class ProductController {
     }
 
     @PostMapping(value = "", produces = "text/plain")
-    public ResponseEntity<String> saveProduct(HttpServletRequest request, @RequestBody ProdutoNewDTO produtoNewDTO) {
+    public ResponseEntity<String> saveProduct(@RequestHeader("Authorization") String token, HttpServletRequest request, @RequestBody ProdutoNewDTO produtoNewDTO) {
 
         try {
 
@@ -127,6 +171,18 @@ public class ProductController {
             ProdutoNewDTO returnProd = new ProdutoNewDTO(p);
 
             status = HttpStatus.OK;
+
+            String t = token.split(" ")[1];
+            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+            User u = new User();
+            u.setId(http.getUserDetails().getId());
+            Log log = new Log();
+            log.setUser(u);
+            log.setActivity(Activity.NEW);
+            log.setDate(new Date());
+            log.setTableName("product");
+            log.setTableId(p.getId());
+            logRepository.save(log);
 
             return ResponseEntity.status(status.value()).body(returnProd.toString());
         } catch (Exception e) {
@@ -140,19 +196,6 @@ public class ProductController {
                 }
             }
             return ResponseEntity.status(404).body(error);
-        }
-    }
-
-    @DeleteMapping(value = "/{id}", produces = "text/plain")
-    public ResponseEntity<String> deleteProduct(HttpServletRequest request, @PathVariable(required = true) Long id) {
-
-        try {
-
-            repository.deleteById(id);
-            return ResponseEntity.ok().body("Produto deletado com sucesso!");
-        } catch (Exception e) {
-
-            return ResponseEntity.status(404).body("Produto não encontrado");
         }
     }
 }
