@@ -3,10 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.Enum.Activity;
 import com.example.demo.dto.ProdutoNewDTO;
 import com.example.demo.dto.ProdutoReturnDTO;
-import com.example.demo.entities.Brand;
-import com.example.demo.entities.Log;
-import com.example.demo.entities.Product;
-import com.example.demo.entities.User;
+import com.example.demo.entities.*;
 import com.example.demo.repository.LogRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.session.HttpSessionParam;
@@ -40,7 +37,11 @@ public class ProductController {
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
     public ResponseEntity<String> getProduct(HttpServletRequest request,
                                              @RequestParam(value = "name", required = false) String name,
+                                             @RequestParam(value = "barCode", required = false) Long barCode,
                                              @RequestParam(value = "brandId", required = false) Long brandId,
+                                             @RequestParam(value = "groupId", required = false) Long groupId,
+                                             @RequestParam(value = "typeId", required = false) Long typeId,
+                                             @RequestParam(value = "muId", required = false) Long muId,
                                              @PathVariable(required = false) Long id) {
         try {
 
@@ -68,10 +69,28 @@ public class ProductController {
                 if(name != null){
                     p.setName(name);
                 }
+                if(barCode != null){
+                    p.setBarCode(barCode.toString());
+                }
                 if(brandId != null){
                     Brand b = new Brand();
                     b.setId(brandId);
                     p.setBrand(b);
+                }
+                if(groupId != null){
+                    Group g = new Group();
+                    g.setId(groupId);
+                    p.setGroup(g);
+                }
+                if(typeId != null){
+                    Type t = new Type();
+                    t.setId(typeId);
+                    p.setType(t);
+                }
+                if(muId != null){
+                    MU m = new MU();
+                    m.setId(muId);
+                    p.setMu(m);
                 }
                 ExampleMatcher matcher = ExampleMatcher.matching()
                         .withIgnoreNullValues()
@@ -80,12 +99,16 @@ public class ProductController {
 
 
                 List<ProdutoReturnDTO> ps = repository.findAll(
-                                example, Sort.by("name"))
+                                example
+                                //,
+                              //  Sort.by("name")
+                        )
                         .stream().map(ProdutoReturnDTO::new).
                         collect(Collectors.toList());
                 json = mapper.writeValueAsString(ps);
+                System.out.println(ps);
             }
-            System.out.println(json);
+
             return ResponseEntity.status(status.value()).body(json);
         } catch (Exception e) {
             e.printStackTrace();

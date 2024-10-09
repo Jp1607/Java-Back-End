@@ -27,20 +27,20 @@ public class DemoApplication implements CommandLineRunner {
 
 	@Override
 	public void run(String... args) throws Exception 	{
-		User u = new User();
-		u.setId(1L);
-		u.setName("admin");
-		u.setActive(1);
-		u.setPassword("$2a$10$WMwGGHmwDwBDlm6592NmPuZpLKTmX/l.7iV8jwyiuViC80Ho3JbIq");
-		Set<Roles> r = new HashSet();
-		Roles r1 = new Roles();
-		r1.setId(1L);
-		r1.setName("ADMIN");
-		roleRepository.save(r1);
-
-		r.add(r1);
-		u.setRoles(r);
-
-		userRepository.save(u);
+//		User u = new User();
+//		u.setId(1L);
+//		u.setName("admin");
+//		u.setActive(1);
+//		u.setPassword("$2a$10$WMwGGHmwDwBDlm6592NmPuZpLKTmX/l.7iV8jwyiuViC80Ho3JbIq");
+//		Set<Roles> r = new HashSet();
+//		Roles r1 = new Roles();
+//		r1.setId(1L);
+//		r1.setName("ADMIN");
+//		roleRepository.save(r1);
+//
+//		r.add(r1);
+//		u.setRoles(r);
+//
+//		userRepository.save(u);
 	}
 }

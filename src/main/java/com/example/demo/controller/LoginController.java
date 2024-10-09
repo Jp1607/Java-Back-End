@@ -6,11 +6,13 @@ import com.example.demo.dto.UserLoginDTO;
 import com.example.demo.entities.Log;
 import com.example.demo.entities.User;
 import com.example.demo.repository.LogRepository;
+import com.example.demo.repository.UserRepository;
 import com.example.demo.session.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,23 +35,24 @@ public class LoginController {
     private JwtSerivce jwtSerivce;
     @Autowired
     private LogRepository logRepository;
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public UserLoginDTO authentication(HttpServletRequest request, @RequestBody CredentialsDTO credentials) {
         try {
-            UserDetails userDetails = userService.loadUserByUsername(credentials.getUsername());
-            if (encoder.matches(credentials.getPassword(), userDetails.getPassword())) {
+            User user = userRepository.findByName(credentials.getUsername()).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrrado"));
+            if (encoder.matches(credentials.getPassword(), user.getPassword())) {
+                CustomUserDetails userDetails = new CustomUserDetails(user.getId(),user.getName(), user.getPassword(), user.getActive().compareTo(1) == 0, user.getAuthorities());
                 String token = jwtSerivce.generatorToken(userDetails);
-                httpSessionService.addNewSession(request, (CustomUserDetails) userDetails, token);
-                System.out.println("ativo" + userDetails.isEnabled());
-                User u = new User();
-                u.setId(((CustomUserDetails) userDetails).getId());
+                user.setToken(token);
+                httpSessionService.addNewSession(request, userDetails, token);
                 Log log = new Log();
-                log.setUser(u);
+                log.setUser(user);
                 log.setActivity(Activity.LOGIN);
                 log.setDate(new Date());
-                System.out.println(log.getActivity().getDescription());
                 logRepository.save(log);
+                userRepository.save(user);
                 return new UserLoginDTO(userDetails.getUsername(), token, userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.toList()));
             }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha inválida");
@@ -61,23 +64,24 @@ public class LoginController {
     @GetMapping(value = "/logout", produces = "text/plain")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token, HttpServletRequest request) {
         try {
-
             if(token != null && token.startsWith("Bearer")){
                 String t = token.split(" ")[1];
-                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-                User u = new User();
-                u.setId(http.getUserDetails().getId());
+                Long userId = jwtSerivce.getIdUser(t);
+                User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrrado"));
                 Log log = new Log();
-                log.setUser(u);
+                log.setUser(user);
                 log.setActivity(Activity.LOGOUT);
                 log.setDate(new Date());
-
                 logRepository.save(log);
+                user.setToken(null);
+                userRepository.save(user);
                 httpSessionService.invalideSession(t);
             }
             return ResponseEntity.ok().body("Sessão fechada com sucesso!");
         } catch (Exception e) {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.toString());
+            e.printStackTrace();
+            System.out.println(e.getMessage());
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.getMessage());
         }
     }
 

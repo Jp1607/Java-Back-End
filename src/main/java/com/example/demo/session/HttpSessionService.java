@@ -71,8 +71,8 @@ public class HttpSessionService {
         if (isSessionActive(token)) {
             try {
                 sessions.get(token).getHttpSession().invalidate();
-            } catch (Exception e) {
-                System.out.println("Sessão já está invalidada");
+            } catch (Exception ignored) {
+
             }
             sessions.remove(token);
         } else {

@@ -12,6 +12,8 @@ import com.example.demo.session.HttpSessionParam;
 import com.example.demo.session.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -39,12 +41,13 @@ public class UserController {
     private UserRepository userRepository;
 
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
-    public ResponseEntity<String> getUser(@PathVariable(required = false) Long id) {
+    public ResponseEntity<String> getUser(@RequestParam(value = "name", required = false) String name,
+                                          @PathVariable(required = false) Long id) {
 
         try {
 
             ObjectMapper mapper = new ObjectMapper();
-            String json;
+            String json = "";
             HttpStatus status = HttpStatus.OK;
 
             if (id != null) {
@@ -60,16 +63,19 @@ public class UserController {
                 }
             } else {
 
-//                UserDTO usersDTO = mapper.convertValue(userRepository.findAll(), UserDTO.class);
-//                System.out.println(usersDTO);
-//                List<User> users = userRepository.findAll();
-//                json = mapper.writeValueAsString(users);
+                User u = new User();
+                if (name != null) {
+                    u.setName(name);
+                }
+                ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+                Example<User> example = Example.of(u, matcher);
 
-                List<UserDTO> users = userRepository.findAll().stream().map(UserDTO::new).collect(Collectors.toList());
+
+                List<UserDTO> users = userRepository.findAll(example).stream().map(UserDTO::new).collect(Collectors.toList());
                 json = mapper.writeValueAsString(users);
             }
-
             return ResponseEntity.status(status).body(json);
+
         } catch (Exception e) {
 
             e.printStackTrace();
@@ -152,21 +158,21 @@ public class UserController {
                 user = toValidate.get();
 
 
-                    user.setActive(0);
-                    userRepository.save(user);
+                user.setActive(0);
+                userRepository.save(user);
 
-                    String t = token.split(" ")[1];
-                    HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-                    user.setId(http.getUserDetails().getId());
-                    Log log = new Log();
-                    log.setUser(user);
-                    log.setActivity(Activity.NEW);
-                    log.setDate(new Date());
-                    log.setTableName("user");
-                    log.setTableId(user.getId());
-                    logRepository.save(log);
+                String t = token.split(" ")[1];
+                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+                user.setId(http.getUserDetails().getId());
+                Log log = new Log();
+                log.setUser(user);
+                log.setActivity(Activity.NEW);
+                log.setDate(new Date());
+                log.setTableName("user");
+                log.setTableId(user.getId());
+                logRepository.save(log);
 
-                    return ResponseEntity.status(202).body("Usuário desativado com sucesso");
+                return ResponseEntity.status(202).body("Usuário desativado com sucesso");
 
 //                else {
 //

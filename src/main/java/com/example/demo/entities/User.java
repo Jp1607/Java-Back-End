@@ -22,9 +22,12 @@ public class User extends DefaultEntities implements UserDetails {
     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "users_roles", joinColumns = @JoinColumn(name = "user_id"), inverseJoinColumns = @JoinColumn(name = "role_id"))
     private Set<Roles> roles;
+
+    @Column(name = "token")
+    private String token;
+
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         if (this.roles == null) {
@@ -46,4 +49,6 @@ public class User extends DefaultEntities implements UserDetails {
     public void setPassword(String password) { this.password = password; }
     public Set<Roles> getRole() { return roles; }
     public void setRoles(Set<Roles> roles) { this.roles = roles; }
+    public String getToken() { return token; }
+    public void setToken(String token) { this.token = token; }
 }
