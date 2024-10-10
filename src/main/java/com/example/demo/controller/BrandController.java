@@ -11,11 +11,14 @@ import com.example.demo.session.HttpSessionParam;
 import com.example.demo.session.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Example;
+import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/brand")
@@ -31,26 +34,37 @@ public class BrandController {
     @Autowired
     BrandRepository repository;
 
-    public List getBrandList(){
-        List <Brand> brands = repository.findAll();
+    public List getBrandList() {
+        List<Brand> brands = repository.findAll();
         return brands;
     }
 
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
-    public ResponseEntity<String> getBrand(@PathVariable (required = false) Long id) {
+    public ResponseEntity<String> getBrand(@RequestParam(value = "name", required = false) String name,
+                                           @RequestParam(value = "active", required = false) boolean active,
+                                           @PathVariable(required = false) Long id) {
 
         ObjectMapper mapper = new ObjectMapper();
 
         try {
-        if (id == null){
-
-            List<Brand> entBrands = repository.findAll();
-
-            return ResponseEntity.status(200).body(mapper.writeValueAsString(entBrands));
-        } else {
-            Brand brand = repository.findById(id).get();
-            return ResponseEntity.status(200).body(mapper.writeValueAsString(brand));
-        }
+            if (id == null) {
+                Brand b = new Brand();
+                b.setId(null);
+                if (name != null) {
+                    b.setDescription(name);
+                }
+                ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+                Example<Brand> example = Example.of(b, matcher);
+                List<Brand> entBrands = repository.findAll(example);
+                if (active) {
+                    return ResponseEntity.status(200).body(mapper.writeValueAsString(entBrands));
+                } else {
+                    return ResponseEntity.status(200).body(mapper.writeValueAsString(entBrands.stream().filter(brand -> brand.getActive().compareTo(1) == 0).collect(Collectors.toList())));
+                }
+            } else {
+                Brand brand = repository.findById(id).get();
+                return ResponseEntity.status(200).body(mapper.writeValueAsString(brand));
+            }
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.toString());
@@ -86,7 +100,8 @@ public class BrandController {
     }
 
     @PutMapping(value = "/{id}", produces = "text/plain")
-    public ResponseEntity<String> putBrand(@RequestHeader("Authorization") String token, @PathVariable Long id) {
+    public ResponseEntity<String> stateBrand(@RequestHeader("Authorization") String token,
+                                             @PathVariable Long id) {
 
         try {
 
@@ -115,5 +130,31 @@ public class BrandController {
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }
+    }
+
+    @PutMapping(value = "/edit", produces = "text/plain")
+    public ResponseEntity<String> editBrand(@RequestHeader("Authorization") String token,
+                                            @RequestBody Brand brand) {
+        try {
+
+            repository.save(brand);
+
+            String t = token.split(" ")[1];
+            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+
+            User u = new User();
+            u.setId(http.getUserDetails().getId());
+            Log log = new Log();
+            log.setUser(u);
+            log.setActivity(Activity.EDIT);
+            log.setDate(new Date());
+            log.setTableName("product_brand");
+            log.setTableId(brand.getId());
+            logRepository.save(log);
+            return ResponseEntity.ok("Marca editada com sucesso");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(e.getMessage());
+        }
+
     }
 }

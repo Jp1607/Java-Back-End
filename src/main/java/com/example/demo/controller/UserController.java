@@ -2,11 +2,9 @@ package com.example.demo.controller;
 
 import com.example.demo.Enum.Activity;
 import com.example.demo.dto.UserDTO;
-import com.example.demo.dto.UserLoginDTO;
 import com.example.demo.entities.Log;
 import com.example.demo.entities.User;
 import com.example.demo.repository.LogRepository;
-import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.UserRepository;
 import com.example.demo.session.HttpSessionParam;
 import com.example.demo.session.HttpSessionService;
@@ -42,6 +40,7 @@ public class UserController {
 
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
     public ResponseEntity<String> getUser(@RequestParam(value = "name", required = false) String name,
+                                          @RequestParam(value = "active", required = false) boolean active,
                                           @PathVariable(required = false) Long id) {
 
         try {
@@ -64,15 +63,18 @@ public class UserController {
             } else {
 
                 User u = new User();
+                u.setId(null);
                 if (name != null) {
                     u.setName(name);
                 }
                 ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
                 Example<User> example = Example.of(u, matcher);
-
-
                 List<UserDTO> users = userRepository.findAll(example).stream().map(UserDTO::new).collect(Collectors.toList());
-                json = mapper.writeValueAsString(users);
+                if (active) {
+                    json = mapper.writeValueAsString(users);
+                } else {
+                    json = mapper.writeValueAsString(users.stream().filter(UserDTO::getActive).collect(Collectors.toList()));
+                }
             }
             return ResponseEntity.status(status).body(json);
 
