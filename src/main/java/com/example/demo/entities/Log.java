@@ -1,12 +1,14 @@
 package com.example.demo.entities;
-
 import com.example.demo.Enum.Activity;
-
+import com.example.demo.session.HttpSessionParam;
+import com.example.demo.session.HttpSessionService;
+import org.springframework.beans.factory.annotation.Autowired;
 import javax.persistence.*;
 import java.util.Date;
 
 @Entity
 @Table(name = "log")
+
 public class Log {
 
     @Id
@@ -31,15 +33,6 @@ public class Log {
     @Column(name = "date")
     private Date date;
 
-    public Log(Long id, User user, String tableName, Long tableId, Activity activity, Date date) {
-        this.id = id;
-        this.user = user;
-        this.tableName = tableName;
-        this.tableId = tableId;
-        this.activity = activity;
-        this.date = date;
-    }
-
     public Log() {
     }
 
@@ -59,24 +52,12 @@ public class Log {
         this.user = user;
     }
 
-    public String getTableName() {
-        return tableName;
-    }
-
     public void setTableName(String tableName) {
         this.tableName = tableName;
     }
 
-    public Long getTableId() {
-        return tableId;
-    }
-
     public void setTableId(Long tableId) {
         this.tableId = tableId;
-    }
-
-    public Activity getActivity() {
-        return activity;
     }
 
     public void setActivity(Activity activity) {

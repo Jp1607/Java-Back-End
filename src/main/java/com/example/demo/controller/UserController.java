@@ -120,7 +120,7 @@ public class UserController {
 
                 user.setPassword(encoder.encode(user.getPassword()));
                 user.setActive(1);
-
+                user.setName(user.getName().toUpperCase());
                 User u = userRepository.save(user);
                 UserDTO convertedUser = new UserDTO(u);
 
@@ -158,9 +158,8 @@ public class UserController {
             if (toValidate.isPresent()) {
 
                 user = toValidate.get();
-
-
                 user.setActive(0);
+                user.setName(user.getName().toUpperCase());
                 userRepository.save(user);
 
                 String t = token.split(" ")[1];
@@ -200,7 +199,7 @@ public class UserController {
             }
         } catch (Exception e) {
 
-            return ResponseEntity.status(404).body("Erro ao editar o usuário");
+            return ResponseEntity.status(500).body("Erro ao editar o usuário" + e.getMessage());
         }
     }
 

@@ -17,6 +17,7 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.List;
@@ -35,17 +36,21 @@ public class ProductController {
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
     public ResponseEntity<String> getProduct(HttpServletRequest request,
                                              @RequestParam(value = "name", required = false) String name,
+                                             @RequestParam(value = "description", required = false) String description,
                                              @RequestParam(value = "barCode", required = false) Long barCode,
                                              @RequestParam(value = "brandId", required = false) Long brandId,
                                              @RequestParam(value = "groupId", required = false) Long groupId,
                                              @RequestParam(value = "typeId", required = false) Long typeId,
                                              @RequestParam(value = "muId", required = false) Long muId,
+                                             @RequestParam(value = "active", required = false) boolean active,
                                              @PathVariable(required = false) Long id) {
+
+        String json;
+        HttpStatus status = HttpStatus.OK;
+
         try {
 
             ObjectMapper mapper = new ObjectMapper();
-            String json;
-            HttpStatus status = HttpStatus.OK;
 
             if (id != null) {
 
@@ -64,28 +69,31 @@ public class ProductController {
             } else {
                 Product p = new Product();
                 p.setId(null);
-                if(name != null){
+                if (name != null) {
                     p.setName(name);
                 }
-                if(barCode != null){
+                if(description != null){
+                    p.setDescription(description);
+                }
+                if (barCode != null) {
                     p.setBarCode(barCode.toString());
                 }
-                if(brandId != null){
+                if (brandId != null) {
                     Brand b = new Brand();
                     b.setId(brandId);
                     p.setBrand(b);
                 }
-                if(groupId != null){
+                if (groupId != null) {
                     Group g = new Group();
                     g.setId(groupId);
                     p.setGroup(g);
                 }
-                if(typeId != null){
+                if (typeId != null) {
                     Type t = new Type();
                     t.setId(typeId);
                     p.setType(t);
                 }
-                if(muId != null){
+                if (muId != null) {
                     MU m = new MU();
                     m.setId(muId);
                     p.setMu(m);
@@ -94,24 +102,23 @@ public class ProductController {
                         .withIgnoreNullValues()
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
                 Example<Product> example = Example.of(p, matcher);
-
-
-                List<ProdutoReturnDTO> ps = repository.findAll(
-                                example
-                                //,
-                              //  Sort.by("name")
-                        )
+                List<ProdutoReturnDTO> ps = repository.findAll(example)
                         .stream().map(ProdutoReturnDTO::new).
                         collect(Collectors.toList());
-                json = mapper.writeValueAsString(ps);
-                System.out.println(ps);
+
+                if (active) {
+                    json = mapper.writeValueAsString(ps);
+                } else {
+                    json = mapper.writeValueAsString(ps.stream().filter(ProdutoReturnDTO::getActive).collect(Collectors.toList()));
+                }
+
             }
 
-            return ResponseEntity.status(status.value()).body(json);
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(404).body("Produto não encontrado " + e.getStackTrace());
         }
+        return ResponseEntity.status(status.value()).body(json);
     }
 
     @PutMapping(value = "/edit", produces = "text/plain")
@@ -123,21 +130,17 @@ public class ProductController {
 
                 return ResponseEntity.status(406).body("Produto sem id para edição");
             }
-
+            product.setName(product.getName().toUpperCase());
+            product.setDescription(product.getDescription().toUpperCase());
             repository.save(product);
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//            String t = token.split(" ")[1];
+//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//            User u = new User();
+//            Log log = new Log(t, "product", product.getId(), Activity.EDIT, new Date());
+//            log.setUser(u);
+//            logRepository.save(log);
 
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.EDIT);
-            log.setDate(new Date());
-            log.setTableName("product");
-            log.setTableId(product.getId());
-            logRepository.save(log);
             return ResponseEntity.ok("Produto editado com sucesso");
         } catch (Exception e) {
 
@@ -155,19 +158,21 @@ public class ProductController {
             try {
 
                 p.setActive(p.getActive().compareTo(1) == 0 ? 0 : 1);
+                p.setName(p.getName().toUpperCase());
+                p.setDescription(p.getDescription().toUpperCase());
                 repository.save(p);
 
-                String t = token.split(" ")[1];
-                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-                User u = new User();
-                u.setId(http.getUserDetails().getId());
-                Log log = new Log();
-                log.setUser(u);
-                log.setActivity(Activity.DELETE);
-                log.setDate(new Date());
-                log.setTableName("product");
-                log.setTableId(p.getId());
-                logRepository.save(log);
+//                String t = token.split(" ")[1];
+//                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//                User u = new User();
+//                u.setId(http.getUserDetails().getId());
+//                Log log = new Log();
+//                log.setUser(u);
+//                log.setActivity(Activity.DELETE);
+//                log.setDate(new Date());
+//                log.setTableName("product");
+//                log.setTableId(p.getId());
+//                logRepository.save(log);
 
                 return ResponseEntity.status(HttpStatus.OK).body("Estado editado com sucesso" + p.toString());
             } catch (Exception e) {
@@ -188,22 +193,27 @@ public class ProductController {
             HttpStatus status = HttpStatus.NOT_FOUND;
 
             Product convertProd = new Product(produtoNewDTO);
+            convertProd.setName(convertProd.getName().toUpperCase());
+            convertProd.setDescription(convertProd.getDescription().toUpperCase());
             Product p = repository.save(convertProd);
             ProdutoNewDTO returnProd = new ProdutoNewDTO(p);
 
             status = HttpStatus.OK;
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.NEW);
-            log.setDate(new Date());
-            log.setTableName("product");
-            log.setTableId(p.getId());
-            logRepository.save(log);
+//            String t = token.split(" ")[1];
+//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//            User u = new User();
+//            u.setId(http.getUserDetails().getId());
+//            Log log = new Log();
+//            log.setUser(u);
+//            log.setActivity(Activity.NEW);
+//            log.setDate(new Date());
+//            log.setTableName("product");
+//            log.setTableId(p.getId());
+//            logRepository.save(log);
+
+            LogController logCtrl = new LogController(token, "product", p.getId(), Activity.NEW);
+            logCtrl.save();
 
             return ResponseEntity.status(status.value()).body(returnProd.toString());
         } catch (Exception e) {

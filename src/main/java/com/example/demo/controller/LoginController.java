@@ -46,11 +46,13 @@ public class LoginController {
                 String token = jwtSerivce.generatorToken(userDetails);
                 user.setToken(token);
                 httpSessionService.addNewSession(request, userDetails, token);
-                Log log = new Log();
-                log.setUser(user);
-                log.setActivity(Activity.LOGIN);
-                log.setDate(new Date());
+               Log log = new Log();
+               log.setUser(user);
+               log.setActivity(Activity.LOGIN);
+               log.setDate(new Date());
                 logRepository.save(log);
+//                LogController logCtrl = new LogController(token, null, null, Activity.LOGIN);
+//                logCtrl.save();
                 userRepository.save(user);
                 return new UserLoginDTO(userDetails.getUsername(), token, userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.toList()));
             }
@@ -67,11 +69,13 @@ public class LoginController {
                 String t = token.split(" ")[1];
                 Long userId = jwtSerivce.getIdUser(t);
                 User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrrado"));
-                Log log = new Log();
-                log.setUser(user);
-                log.setActivity(Activity.LOGOUT);
-                log.setDate(new Date());
-                logRepository.save(log);
+//                Log log = new Log();
+//                log.setUser(user);
+//                log.setActivity(Activity.LOGOUT);
+//                log.setDate(new Date());
+//                logRepository.save(log);
+                LogController logCtrl = new LogController(token, null, null, Activity.LOGOUT);
+                logCtrl.save();
                 user.setToken(null);
                 userRepository.save(user);
                 httpSessionService.invalideSession(t);

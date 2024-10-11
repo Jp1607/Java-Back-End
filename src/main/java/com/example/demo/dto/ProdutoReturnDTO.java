@@ -108,4 +108,11 @@ public class ProdutoReturnDTO {
         this.muDesc = muDesc;
     }
 
+    public Boolean getActive() {
+        return active;
+    }
+
+    public void setActive(Boolean active) {
+        this.active = active;
+    }
 }

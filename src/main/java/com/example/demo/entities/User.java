@@ -13,6 +13,14 @@ import java.util.stream.Collectors;
 
 public class User extends DefaultEntities implements UserDetails {
 
+    public User() {
+
+    }
+
+    public User(Long idUser) {
+        this.id = idUser;
+    }
+
     @Column(name = "name", unique = true)
     private String name;
 

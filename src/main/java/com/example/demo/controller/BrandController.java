@@ -77,20 +77,21 @@ public class BrandController {
         try {
 
             Brand brand = new Brand(brandDTO);
+            brand.setDescription(brand.getDescription().toUpperCase());
             Brand b = repository.save(brand);
             BrandNewDTO retBrand = new BrandNewDTO(b);
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.NEW);
-            log.setDate(new Date());
-            log.setTableName("product_brand");
-            log.setTableId(brand.getId());
-            logRepository.save(log);
+//            String t = token.split(" ")[1];
+//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//            User u = new User();
+//            u.setId(http.getUserDetails().getId());
+//            Log log = new Log();
+//            log.setUser(u);
+//            log.setActivity(Activity.NEW);
+//            log.setDate(new Date());
+//            log.setTableName("product_brand");
+//            log.setTableId(brand.getId());
+//            logRepository.save(log);
 
             return ResponseEntity.status(200).body(retBrand.toString());
         } catch (Exception e) {
@@ -109,6 +110,7 @@ public class BrandController {
                 Brand brand = repository.findById(id).get();
 
                 brand.setActive(brand.getActive().compareTo(1) == 0 ? 0 : 1);
+                brand.setDescription(brand.getDescription().toUpperCase());
                 repository.save(brand);
 
                 String t = token.split(" ")[1];
@@ -137,6 +139,7 @@ public class BrandController {
                                             @RequestBody Brand brand) {
         try {
 
+            brand.setDescription(brand.getDescription().toUpperCase());
             repository.save(brand);
 
             String t = token.split(" ")[1];

@@ -72,20 +72,21 @@ public class GroupController {
         try {
 
             Group group = new Group(groupDTO);
+            group.setDescription(group.getDescription().toUpperCase());
             Group g = repository.save(group);
             GroupNewDTO retGroup = new GroupNewDTO(g);
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.NEW);
-            log.setDate(new Date());
-            log.setTableName("product_group");
-            log.setTableId(g.getId());
-            logRepository.save(log);
+//            String t = token.split(" ")[1];
+//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//            User u = new User();
+//            u.setId(http.getUserDetails().getId());
+//            Log log = new Log();
+//            log.setUser(u);
+//            log.setActivity(Activity.NEW);
+//            log.setDate(new Date());
+//            log.setTableName("product_group");
+//            log.setTableId(g.getId());
+//            logRepository.save(log);
 
             return ResponseEntity.status(200).body(retGroup.toString());
         } catch (Exception e) {
@@ -103,6 +104,7 @@ public class GroupController {
                 Group group = repository.findById(id).get();
 
                 group.setActive(group.getActive().compareTo(1) == 0 ? 0 : 1);
+                group.setDescription(group.getDescription().toUpperCase());
                 repository.save(group);
 
                 String t = token.split(" ")[1];
@@ -131,6 +133,7 @@ public class GroupController {
                                             @RequestBody Group group) {
         try {
 
+            group.setDescription(group.getDescription().toUpperCase());
             repository.save(group);
 
             String t = token.split(" ")[1];

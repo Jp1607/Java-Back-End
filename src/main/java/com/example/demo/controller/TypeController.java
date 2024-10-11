@@ -72,20 +72,21 @@ public class TypeController {
         try {
 
             Type type = new Type(typeDTO);
+            type.setDescription(type.getDescription().toUpperCase());
             Type T = repository.save(type);
             TypeNewDTO retType = new TypeNewDTO(T);
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.NEW);
-            log.setDate(new Date());
-            log.setTableName("product_type");
-            log.setTableId(T.getId());
-            logRepository.save(log);
+//            String t = token.split(" ")[1];
+//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+//            User u = new User();
+//            u.setId(http.getUserDetails().getId());
+//            Log log = new Log();
+//            log.setUser(u);
+//            log.setActivity(Activity.NEW);
+//            log.setDate(new Date());
+//            log.setTableName("product_type");
+//            log.setTableId(T.getId());
+//            logRepository.save(log);
 
             return ResponseEntity.status(200).body(retType.toString());
         } catch (Exception e) {
@@ -103,6 +104,7 @@ public class TypeController {
                 Type type = repository.findById(id).get();
 
                 type.setActive(type.getActive().compareTo(1) == 0 ? 0 : 1);
+                type.setDescription(type.getDescription().toUpperCase());
                 repository.save(type);
 
                 String t = token.split(" ")[1];
@@ -131,6 +133,7 @@ public class TypeController {
                                             @RequestBody Type type) {
         try {
 
+            type.setDescription(type.getDescription().toUpperCase());
             repository.save(type);
 
             String t = token.split(" ")[1];

@@ -71,6 +71,7 @@ public class MUController {
         try {
 
             MU mu = new MU(muDTO);
+            mu.setDescription(mu.getDescription().toUpperCase());
             MU m = repository.save(mu);
             muNewDTO retMU = new muNewDTO(m);
 
@@ -102,6 +103,7 @@ public class MUController {
                 MU mu= repository.findById(id).get();
 
                 mu.setActive(mu.getActive().compareTo(1) == 0 ? 0 : 1);
+                mu.setDescription(mu.getDescription().toUpperCase());
                 repository.save(mu);
 
                 String t = token.split(" ")[1];
@@ -130,6 +132,7 @@ public class MUController {
                                             @RequestBody MU mu) {
         try {
 
+            mu.setDescription(mu.getDescription().toUpperCase());
             repository.save(mu);
 
             String t = token.split(" ")[1];
