@@ -1,14 +1,11 @@
 package com.example.demo.controller;
-
 import com.example.demo.Enum.Activity;
 import com.example.demo.dto.BrandNewDTO;
 import com.example.demo.entities.Brand;
-import com.example.demo.entities.Log;
-import com.example.demo.entities.User;
 import com.example.demo.repository.BrandRepository;
 import com.example.demo.repository.LogRepository;
-import com.example.demo.session.HttpSessionParam;
-import com.example.demo.session.HttpSessionService;
+import com.example.demo.service.LogService;
+import com.example.demo.service.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -16,7 +13,6 @@ import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -29,10 +25,10 @@ public class BrandController {
     private HttpSessionService httpSessionService;
 
     @Autowired
-    private LogRepository logRepository;
+    BrandRepository repository;
 
     @Autowired
-    BrandRepository repository;
+    private LogService logService;
 
     public List getBrandList() {
         List<Brand> brands = repository.findAll();
@@ -81,17 +77,7 @@ public class BrandController {
             Brand b = repository.save(brand);
             BrandNewDTO retBrand = new BrandNewDTO(b);
 
-//            String t = token.split(" ")[1];
-//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-//            User u = new User();
-//            u.setId(http.getUserDetails().getId());
-//            Log log = new Log();
-//            log.setUser(u);
-//            log.setActivity(Activity.NEW);
-//            log.setDate(new Date());
-//            log.setTableName("product_brand");
-//            log.setTableId(brand.getId());
-//            logRepository.save(log);
+            logService.save(token, Activity.NEW, "product_brand", brand.getId());
 
             return ResponseEntity.status(200).body(retBrand.toString());
         } catch (Exception e) {
@@ -113,17 +99,7 @@ public class BrandController {
                 brand.setDescription(brand.getDescription().toUpperCase());
                 repository.save(brand);
 
-                String t = token.split(" ")[1];
-                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-                User u = new User();
-                u.setId(http.getUserDetails().getId());
-                Log log = new Log();
-                log.setUser(u);
-                log.setActivity(Activity.DELETE);
-                log.setDate(new Date());
-                log.setTableName("product_brand");
-                log.setTableId(brand.getId());
-                logRepository.save(log);
+                logService.save(token, Activity.DELETE, "product_brand", brand.getId());
 
                 return ResponseEntity.status(200).body("Marca alterada com sucesso");
             } else {
@@ -142,18 +118,8 @@ public class BrandController {
             brand.setDescription(brand.getDescription().toUpperCase());
             repository.save(brand);
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+            logService.save(token, Activity.EDIT, "product_brand", brand.getId());
 
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.EDIT);
-            log.setDate(new Date());
-            log.setTableName("product_brand");
-            log.setTableId(brand.getId());
-            logRepository.save(log);
             return ResponseEntity.ok("Marca editada com sucesso");
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());

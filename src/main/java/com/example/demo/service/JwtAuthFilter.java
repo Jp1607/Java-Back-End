@@ -1,10 +1,12 @@
-package com.example.demo.session;
+package com.example.demo.service;
 
 import com.example.demo.entities.User;
 import com.example.demo.exceptions.InvalidSession;
 import com.example.demo.exceptions.SessionExpired;
 import com.example.demo.exceptions.unAuthenticated;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.session.CustomUserDetails;
+import com.example.demo.session.HttpSessionParam;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.MalformedJwtException;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -1,9 +1,8 @@
-package com.example.demo.session;
+package com.example.demo.service;
 
+import com.example.demo.session.CustomUserDetails;
 import io.jsonwebtoken.*;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.annotation.Order;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.Calendar;

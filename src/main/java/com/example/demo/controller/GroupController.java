@@ -1,23 +1,17 @@
 package com.example.demo.controller;
-
 import com.example.demo.Enum.Activity;
 import com.example.demo.dto.GroupNewDTO;
-import com.example.demo.entities.Brand;
 import com.example.demo.entities.Group;
-import com.example.demo.entities.Log;
-import com.example.demo.entities.User;
 import com.example.demo.repository.GroupRepository;
 import com.example.demo.repository.LogRepository;
-import com.example.demo.session.HttpSessionParam;
-import com.example.demo.session.HttpSessionService;
+import com.example.demo.service.LogService;
+import com.example.demo.service.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,7 +24,7 @@ public class GroupController {
     private HttpSessionService httpSessionService;
 
     @Autowired
-    private LogRepository logRepository;
+    private LogService logService;
 
     @Autowired
     private GroupRepository repository;
@@ -76,17 +70,7 @@ public class GroupController {
             Group g = repository.save(group);
             GroupNewDTO retGroup = new GroupNewDTO(g);
 
-//            String t = token.split(" ")[1];
-//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-//            User u = new User();
-//            u.setId(http.getUserDetails().getId());
-//            Log log = new Log();
-//            log.setUser(u);
-//            log.setActivity(Activity.NEW);
-//            log.setDate(new Date());
-//            log.setTableName("product_group");
-//            log.setTableId(g.getId());
-//            logRepository.save(log);
+            logService.save(token, Activity.NEW, "product_group", group.getId());
 
             return ResponseEntity.status(200).body(retGroup.toString());
         } catch (Exception e) {
@@ -107,17 +91,7 @@ public class GroupController {
                 group.setDescription(group.getDescription().toUpperCase());
                 repository.save(group);
 
-                String t = token.split(" ")[1];
-                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-                User u = new User();
-                u.setId(http.getUserDetails().getId());
-                Log log = new Log();
-                log.setUser(u);
-                log.setActivity(Activity.DELETE);
-                log.setDate(new Date());
-                log.setTableName("product_group");
-                log.setTableId(group.getId());
-                logRepository.save(log);
+                logService.save(token, Activity.DELETE, "product_group", group.getId());
 
                 return ResponseEntity.status(200).body("Grupo alterado com sucesso");
             } else {
@@ -136,18 +110,8 @@ public class GroupController {
             group.setDescription(group.getDescription().toUpperCase());
             repository.save(group);
 
-            String t = token.split(" ")[1];
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
+            logService.save(token, Activity.EDIT, "product_group", group.getId());
 
-            User u = new User();
-            u.setId(http.getUserDetails().getId());
-            Log log = new Log();
-            log.setUser(u);
-            log.setActivity(Activity.EDIT);
-            log.setDate(new Date());
-            log.setTableName("product_group");
-            log.setTableId(group.getId());
-            logRepository.save(log);
             return ResponseEntity.ok("Grupo editado com sucesso");
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());

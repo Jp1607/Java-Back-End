@@ -1,7 +1,8 @@
-package com.example.demo.session;
+package com.example.demo.service;
 
 import com.example.demo.entities.User;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.session.CustomUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;

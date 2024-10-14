@@ -6,32 +6,35 @@ import com.example.demo.dto.ProdutoReturnDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repository.LogRepository;
 import com.example.demo.repository.ProductRepository;
-import com.example.demo.session.HttpSessionParam;
-import com.example.demo.session.HttpSessionService;
+import com.example.demo.service.LogService;
+import com.example.demo.service.HttpSessionService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import javax.servlet.http.HttpServletRequest;
-import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/product")
 public class ProductController {
+
     @Autowired
     private HttpSessionService httpSessionService;
+
     @Autowired
     ProductRepository repository;
+
     @Autowired
-    private LogRepository logRepository;
+    private LogService logService;
 
     @GetMapping(value = {"", "/{id}"}, produces = "application/json")
     public ResponseEntity<String> getProduct(HttpServletRequest request,
@@ -57,9 +60,6 @@ public class ProductController {
                 Product p = repository.findById(id).get();
                 if (p != null) {
 
-//                    ProdutoReturnDTO prod = new ProdutoReturnDTO(p);
-//                    System.out.println("Produtos: " + p.getBrand() + prod.getBrandDesc());
-
                     json = mapper.writeValueAsString(p);
                 } else {
 
@@ -72,7 +72,7 @@ public class ProductController {
                 if (name != null) {
                     p.setName(name);
                 }
-                if(description != null){
+                if (description != null) {
                     p.setDescription(description);
                 }
                 if (barCode != null) {
@@ -102,6 +102,7 @@ public class ProductController {
                         .withIgnoreNullValues()
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
                 Example<Product> example = Example.of(p, matcher);
+//                Pageable limit = PageRequest.of(0,10);
                 List<ProdutoReturnDTO> ps = repository.findAll(example)
                         .stream().map(ProdutoReturnDTO::new).
                         collect(Collectors.toList());
@@ -134,12 +135,7 @@ public class ProductController {
             product.setDescription(product.getDescription().toUpperCase());
             repository.save(product);
 
-//            String t = token.split(" ")[1];
-//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-//            User u = new User();
-//            Log log = new Log(t, "product", product.getId(), Activity.EDIT, new Date());
-//            log.setUser(u);
-//            logRepository.save(log);
+            logService.save(token, Activity.EDIT, "product", product.getId());
 
             return ResponseEntity.ok("Produto editado com sucesso");
         } catch (Exception e) {
@@ -162,17 +158,7 @@ public class ProductController {
                 p.setDescription(p.getDescription().toUpperCase());
                 repository.save(p);
 
-//                String t = token.split(" ")[1];
-//                HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-//                User u = new User();
-//                u.setId(http.getUserDetails().getId());
-//                Log log = new Log();
-//                log.setUser(u);
-//                log.setActivity(Activity.DELETE);
-//                log.setDate(new Date());
-//                log.setTableName("product");
-//                log.setTableId(p.getId());
-//                logRepository.save(log);
+                logService.save(token, Activity.DELETE, "product", p.getId());
 
                 return ResponseEntity.status(HttpStatus.OK).body("Estado editado com sucesso" + p.toString());
             } catch (Exception e) {
@@ -200,20 +186,7 @@ public class ProductController {
 
             status = HttpStatus.OK;
 
-//            String t = token.split(" ")[1];
-//            HttpSessionParam http = httpSessionService.getHttpSessionParam(t);
-//            User u = new User();
-//            u.setId(http.getUserDetails().getId());
-//            Log log = new Log();
-//            log.setUser(u);
-//            log.setActivity(Activity.NEW);
-//            log.setDate(new Date());
-//            log.setTableName("product");
-//            log.setTableId(p.getId());
-//            logRepository.save(log);
-
-            LogController logCtrl = new LogController(token, "product", p.getId(), Activity.NEW);
-            logCtrl.save();
+            logService.save(token, Activity.NEW, "product", p.getId());
 
             return ResponseEntity.status(status.value()).body(returnProd.toString());
         } catch (Exception e) {

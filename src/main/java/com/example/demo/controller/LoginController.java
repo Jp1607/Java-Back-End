@@ -7,6 +7,10 @@ import com.example.demo.entities.Log;
 import com.example.demo.entities.User;
 import com.example.demo.repository.LogRepository;
 import com.example.demo.repository.UserRepository;
+import com.example.demo.service.HttpSessionService;
+import com.example.demo.service.JwtSerivce;
+import com.example.demo.service.LogService;
+import com.example.demo.service.UserService;
 import com.example.demo.session.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -36,28 +40,26 @@ public class LoginController {
     private LogRepository logRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private LogService logService;
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public UserLoginDTO authentication(HttpServletRequest request, @RequestBody CredentialsDTO credentials) {
         try {
             User user = userRepository.findByName(credentials.getUsername()).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrrado"));
             if (encoder.matches(credentials.getPassword(), user.getPassword())) {
-                CustomUserDetails userDetails = new CustomUserDetails(user.getId(),user.getName(), user.getPassword(), user.getActive().compareTo(1) == 0, user.getAuthorities());
+                CustomUserDetails userDetails = new CustomUserDetails(user.getId(), user.getName(), user.getPassword(), user.getActive().compareTo(1) == 0, user.getAuthorities());
                 String token = jwtSerivce.generatorToken(userDetails);
                 user.setToken(token);
                 httpSessionService.addNewSession(request, userDetails, token);
-               Log log = new Log();
-               log.setUser(user);
-               log.setActivity(Activity.LOGIN);
-               log.setDate(new Date());
-                logRepository.save(log);
-//                LogController logCtrl = new LogController(token, null, null, Activity.LOGIN);
-//                logCtrl.save();
                 userRepository.save(user);
+                logService.saveLog(user, Activity.LOGIN, null, null);
+
                 return new UserLoginDTO(userDetails.getUsername(), token, userDetails.getAuthorities().stream().map(Object::toString).collect(Collectors.toList()));
             }
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Senha inválida");
         } catch (Exception e) {
+            e.printStackTrace();
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, e.toString());
         }
     }
@@ -65,17 +67,17 @@ public class LoginController {
     @GetMapping(value = "/logout", produces = "text/plain")
     public ResponseEntity<String> logout(@RequestHeader("Authorization") String token, HttpServletRequest request) {
         try {
-            if(token != null && token.startsWith("Bearer")){
+            if (token != null && token.startsWith("Bearer")) {
                 String t = token.split(" ")[1];
                 Long userId = jwtSerivce.getIdUser(t);
                 User user = userRepository.findById(userId).orElseThrow(() -> new UsernameNotFoundException("Usuário não encontrrado"));
-//                Log log = new Log();
-//                log.setUser(user);
-//                log.setActivity(Activity.LOGOUT);
-//                log.setDate(new Date());
-//                logRepository.save(log);
-                LogController logCtrl = new LogController(token, null, null, Activity.LOGOUT);
-                logCtrl.save();
+                Log log = new Log();
+                log.setUser(user);
+                log.setActivity(Activity.LOGOUT);
+                log.setDate(new Date());
+                logRepository.save(log);
+//                LogController logCtrl = new LogController(httpSessionService, logRepository);
+//                logCtrl.save(token, Activity.EDIT, "product_group", group.getId());
                 user.setToken(null);
                 userRepository.save(user);
                 httpSessionService.invalideSession(t);

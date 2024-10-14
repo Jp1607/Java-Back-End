@@ -1,8 +1,6 @@
 package com.example.demo.entities;
 import com.example.demo.Enum.Activity;
-import com.example.demo.session.HttpSessionParam;
-import com.example.demo.session.HttpSessionService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import javax.persistence.*;
 import java.util.Date;
 

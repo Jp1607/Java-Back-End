@@ -1,7 +1,9 @@
-package com.example.demo.session;
+package com.example.demo.service;
 
 import com.example.demo.exceptions.InvalidSession;
 import com.example.demo.resources.CalculeteTime;
+import com.example.demo.session.CustomUserDetails;
+import com.example.demo.session.HttpSessionParam;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
