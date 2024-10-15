@@ -15,7 +15,7 @@ public class ProdutoReturnDTO {
     private String description;
 
     @JsonView
-    private String barCode;
+    private int barCode;
 
     @JsonView
     private Boolean active;
@@ -56,7 +56,7 @@ public class ProdutoReturnDTO {
         }
     }
 
-    public ProdutoReturnDTO(Long id, String name, String description, String barCode, Boolean active, String brand, String group, String type, String mu) {
+    public ProdutoReturnDTO(Long id, String name, String description, int barCode, Boolean active, String brand, String group, String type, String mu) {
         this.id = id;
         this.name = name;
         this.description = description;

@@ -17,7 +17,7 @@ public class ProdutoNewDTO {
     private String description;
 
     @JsonView
-    private String barCode;
+    private int barCode;
 
     @JsonView
     private Boolean active;
@@ -46,7 +46,7 @@ public class ProdutoNewDTO {
         this.group = p.getGroup();
     }
 
-    public ProdutoNewDTO(String name, String description, String barCode, Boolean active, Brand brand, Group group, Type type, MU mu) {
+    public ProdutoNewDTO(String name, String description, int barCode, Boolean active, Brand brand, Group group, Type type, MU mu) {
         this.name = name;
         this.description = description;
         this.barCode = barCode;
@@ -73,11 +73,11 @@ public class ProdutoNewDTO {
         this.description = description;
     }
 
-    public String getBarCode() {
+    public int getBarCode() {
         return barCode;
     }
 
-    public void setBarCode(String barCode) {
+    public void setBarCode(int barCode) {
         this.barCode = barCode;
     }
 

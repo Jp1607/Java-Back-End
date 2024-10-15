@@ -14,8 +14,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +38,7 @@ public class ProductController {
     public ResponseEntity<String> getProduct(HttpServletRequest request,
                                              @RequestParam(value = "name", required = false) String name,
                                              @RequestParam(value = "description", required = false) String description,
-                                             @RequestParam(value = "barCode", required = false) Long barCode,
+                                             @RequestParam(value = "barCode", required = false) int barCode,
                                              @RequestParam(value = "brandId", required = false) Long brandId,
                                              @RequestParam(value = "groupId", required = false) Long groupId,
                                              @RequestParam(value = "typeId", required = false) Long typeId,
@@ -75,8 +73,8 @@ public class ProductController {
                 if (description != null) {
                     p.setDescription(description);
                 }
-                if (barCode != null) {
-                    p.setBarCode(barCode.toString());
+                if (barCode != 0) {
+                    p.setBarCode(barCode);
                 }
                 if (brandId != null) {
                     Brand b = new Brand();
@@ -172,20 +170,21 @@ public class ProductController {
     }
 
     @PostMapping(value = "", produces = "text/plain")
-    public ResponseEntity<String> saveProduct(@RequestHeader("Authorization") String token, HttpServletRequest request, @RequestBody ProdutoNewDTO produtoNewDTO) {
+    public ResponseEntity<String> saveProduct(@RequestHeader("Authorization") String token, HttpServletRequest request,
+                                              @RequestBody ProdutoNewDTO produtoNewDTO) {
 
         try {
 
+            if(produtoNewDTO.getBarCode() < 13 | produtoNewDTO.getBarCode() > 14){
+                return  ResponseEntity.status(400).body("código de barras inválido");
+            }
             HttpStatus status = HttpStatus.NOT_FOUND;
-
             Product convertProd = new Product(produtoNewDTO);
             convertProd.setName(convertProd.getName().toUpperCase());
             convertProd.setDescription(convertProd.getDescription().toUpperCase());
             Product p = repository.save(convertProd);
             ProdutoNewDTO returnProd = new ProdutoNewDTO(p);
-
             status = HttpStatus.OK;
-
             logService.save(token, Activity.NEW, "product", p.getId());
 
             return ResponseEntity.status(status.value()).body(returnProd.toString());
