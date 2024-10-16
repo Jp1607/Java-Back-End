@@ -17,7 +17,7 @@ public class Product extends DefaultEntities {
     private String description;
 
     @Column(name = "bar_code", unique = true)
-    private int barCode;
+    private String barCode;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id", referencedColumnName = "id")
@@ -47,6 +47,7 @@ public class Product extends DefaultEntities {
         this.brand = prodDTO.getBrand();
         this.group = prodDTO.getGroup();
         this.type = prodDTO.getType();
+        this.killed = prodDTO.getKilled() ? 1 : 0;
     }
 
     public String getName() {
@@ -57,11 +58,11 @@ public class Product extends DefaultEntities {
         this.name = name;
     }
 
-    public int getBarCode() {
+    public String getBarCode() {
         return barCode;
     }
 
-    public void setBarCode(int barCode) {
+    public void setBarCode(String barCode) {
         this.barCode = barCode;
     }
 

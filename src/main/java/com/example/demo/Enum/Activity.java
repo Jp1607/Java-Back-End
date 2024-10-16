@@ -4,6 +4,7 @@ public enum Activity {
     EDIT("editou"),
     NEW("adicinou"),
     DELETE("removeu"),
+    EDIT_STATE("editou estado"),
     LOGIN("logou"),
     LOGOUT("deslogou");
 

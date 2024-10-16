@@ -8,19 +8,13 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
-public class ProdutoNewDTO {
+public class ProdutoNewDTO extends DefaultDTO{
 
     @JsonView
     private String name;
 
     @JsonView
-    private String description;
-
-    @JsonView
-    private int barCode;
-
-    @JsonView
-    private Boolean active;
+    private String barCode;
 
     @JsonView
     private Brand brand;
@@ -44,9 +38,10 @@ public class ProdutoNewDTO {
         this.brand = p.getBrand();
         this.type = p.getType();
         this.group = p.getGroup();
+        this.killed = p.getKilled() == 1;
     }
 
-    public ProdutoNewDTO(String name, String description, int barCode, Boolean active, Brand brand, Group group, Type type, MU mu) {
+    public ProdutoNewDTO(String name, String description, String barCode, Boolean active, Brand brand, Group group, Type type, MU mu, Boolean killed) {
         this.name = name;
         this.description = description;
         this.barCode = barCode;
@@ -55,6 +50,7 @@ public class ProdutoNewDTO {
         this.group = group;
         this.type = type;
         this.mu = mu;
+        this.killed = killed;
     }
 
     public String getName() {
@@ -65,28 +61,12 @@ public class ProdutoNewDTO {
         this.name = name;
     }
 
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public int getBarCode() {
+    public String getBarCode() {
         return barCode;
     }
 
-    public void setBarCode(int barCode) {
+    public void setBarCode(String barCode) {
         this.barCode = barCode;
-    }
-
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
     }
 
     public Brand getBrand() {
@@ -120,5 +100,4 @@ public class ProdutoNewDTO {
     public void setMu(MU mu) {
         this.mu = mu;
     }
-
 }

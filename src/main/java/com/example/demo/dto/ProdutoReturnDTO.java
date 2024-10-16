@@ -3,7 +3,7 @@ package com.example.demo.dto;
 import com.example.demo.entities.Product;
 import com.fasterxml.jackson.annotation.JsonView;
 
-public class ProdutoReturnDTO {
+public class ProdutoReturnDTO extends DefaultDTO{
 
     @JsonView
     private Long id;
@@ -12,13 +12,7 @@ public class ProdutoReturnDTO {
     private String name;
 
     @JsonView
-    private String description;
-
-    @JsonView
-    private int barCode;
-
-    @JsonView
-    private Boolean active;
+    private String barCode;
 
     @JsonView
     private String brandDesc;
@@ -36,9 +30,14 @@ public class ProdutoReturnDTO {
         this.id = p.getId();
         this.name = p.getName();
         if (p.getActive() != null){
-        this.active = p.getActive() == 1;
+            this.active = p.getActive() == 1;
         } else {
             this.active = false;
+        }
+        if (p.getKilled() != null){
+            this.killed = p.getKilled() == 1;
+        } else {
+            this.killed = false;
         }
         this.description = p.getDescription();
         this.barCode = p.getBarCode();
@@ -56,9 +55,10 @@ public class ProdutoReturnDTO {
         }
     }
 
-    public ProdutoReturnDTO(Long id, String name, String description, int barCode, Boolean active, String brand, String group, String type, String mu) {
+    public ProdutoReturnDTO(Long id, String name, String description, Boolean killed, String barCode, Boolean active, String brand, String group, String type, String mu) {
         this.id = id;
         this.name = name;
+        this.killed = killed;
         this.description = description;
         this.barCode = barCode;
         this.active = active;
@@ -66,14 +66,6 @@ public class ProdutoReturnDTO {
         this.groupDesc = group;
         this.typeDesc = type;
         this.muDesc = mu;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getBrandDesc() {
@@ -108,11 +100,4 @@ public class ProdutoReturnDTO {
         this.muDesc = muDesc;
     }
 
-    public Boolean getActive() {
-        return active;
-    }
-
-    public void setActive(Boolean active) {
-        this.active = active;
-    }
 }

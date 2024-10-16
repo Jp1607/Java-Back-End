@@ -12,6 +12,9 @@ public class DefaultEntities {
     @Column(name = "active", columnDefinition="int(1)" )
     protected Integer active;
 
+    @Column(name = "killed", columnDefinition="int(1)" )
+    protected Integer killed;
+
     public Long getId() {
         return id;
     }
@@ -26,5 +29,13 @@ public class DefaultEntities {
 
     public void setActive(Integer active) {
         this.active = active;
+    }
+
+    public Integer getKilled() {
+        return killed;
+    }
+
+    public void setKilled(Integer killed) {
+        this.killed = killed;
     }
 }

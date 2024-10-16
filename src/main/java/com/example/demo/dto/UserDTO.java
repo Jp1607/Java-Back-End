@@ -1,5 +1,4 @@
 package com.example.demo.dto;
-
 import com.example.demo.entities.User;
 import com.fasterxml.jackson.annotation.JsonView;
 
@@ -7,10 +6,10 @@ public class UserDTO {
 
     @JsonView
     private Long id;
+
     @JsonView
     private String name;
-//    @JsonView
-//    private List<Roles> roles = new ArrayList<>();
+
     @JsonView
     private Boolean active;
 
@@ -18,7 +17,6 @@ public class UserDTO {
         this.id = user.getId();
         this.name = user.getName();
         this.active = user.getActive() == 1;
-//        this.roles = new ArrayList<>(user.getRole());
     }
 
     public Long getId() {
@@ -44,12 +42,4 @@ public class UserDTO {
     public void setActive(Boolean active) {
         this.active = active;
     }
-
-    //    public List<Roles> getRoles() {
-//        return roles;
-//    }
-//
-//    public void setRoles(List<Roles> roles) {
-//        this.roles = roles;
-//    }
 }
