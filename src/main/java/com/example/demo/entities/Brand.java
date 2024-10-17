@@ -24,5 +24,6 @@ public class Brand extends DefaultEntities {
     public Brand(BrandNewDTO brand) {
         this.description = brand.getDescription();
         this.active = brand.getActive() ? 1 : 0;
+        this.killed = brand.getKilled() ? 1 : 0;
     }
 }

@@ -78,6 +78,14 @@ public class Product extends DefaultEntities {
         return brand;
     }
 
+    public Long getBrandId() {
+        if(brand != null){
+        return brand.id;
+        } else {
+            return 0L;
+        }
+    }
+
     public void setBrand(Brand brand) {
         this.brand = brand;
     }
@@ -104,5 +112,21 @@ public class Product extends DefaultEntities {
 
     public void setMu(MU mu) {
         this.mu = mu;
+    }
+
+    @Override
+    public String toString() {
+        return "Product{" +
+                "killed=" + killed +
+                ", active=" + active +
+                ", id=" + id +
+                ", mu=" + mu +
+                ", type=" + type +
+                ", group=" + group +
+                ", brand=" + brand +
+                ", barCode='" + barCode + '\'' +
+                ", description='" + description + '\'' +
+                ", name='" + name + '\'' +
+                '}';
     }
 }

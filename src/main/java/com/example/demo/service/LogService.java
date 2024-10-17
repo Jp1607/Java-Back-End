@@ -20,7 +20,6 @@ public class LogService {
     private LogRepository logRepository;
 
     public LogService() {
-        System.out.println(" estou sendo criada construtor vazio");
     }
 
     public LogService(HttpSessionService httpSessionService, LogRepository logRepository) {

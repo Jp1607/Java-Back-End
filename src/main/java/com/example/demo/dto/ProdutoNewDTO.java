@@ -100,4 +100,18 @@ public class ProdutoNewDTO extends DefaultDTO{
     public void setMu(MU mu) {
         this.mu = mu;
     }
+
+    @Override
+    public String toString() {
+        return "ProdutoNewDTO{" +
+                ", active=" + active +
+                ", description='" + description + '\'' +
+                ", mu=" + mu +
+                ", type=" + type +
+                ", group=" + group +
+                ", brand=" + brand +
+                ", barCode='" + barCode + '\'' +
+                ", name='" + name + '\'' +
+                '}';
+    }
 }

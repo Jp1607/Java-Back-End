@@ -1,11 +1,9 @@
 package com.example.demo.controller;
 
 import com.example.demo.Enum.Activity;
-import com.example.demo.dto.DefaultDTO;
 import com.example.demo.dto.ProdutoNewDTO;
 import com.example.demo.dto.ProdutoReturnDTO;
 import com.example.demo.entities.*;
-import com.example.demo.repository.LogRepository;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.service.LogService;
 import com.example.demo.service.HttpSessionService;
@@ -21,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @RestController
@@ -56,72 +55,108 @@ public class ProductController {
             ObjectMapper mapper = new ObjectMapper();
             Product p = new Product();
             p.setId(null);
-            if (name != null) {
-                p.setName(name);
-            }
-            if (description != null) {
-                p.setDescription(description);
-            }
-            if (barCode != null) {
-                p.setBarCode(barCode);
-            }
-            if (brandId != null) {
-                Brand b = new Brand();
-                b.setId(brandId);
-                p.setBrand(b);
-            }
-            if (groupId != null) {
-                Group g = new Group();
-                g.setId(groupId);
-                p.setGroup(g);
-            }
-            if (typeId != null) {
-                Type t = new Type();
-                t.setId(typeId);
-                p.setType(t);
-            }
-            if (muId != null) {
-                MU m = new MU();
-                m.setId(muId);
-                p.setMu(m);
-            }
-            if (active != null) {
-                p.setActive(active ? 1 : 0);
-            }
-            ExampleMatcher matcher = ExampleMatcher.matching()
-                    .withIgnoreNullValues()
-                    .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
-            Example<Product> example = Example.of(p, matcher);
-            List<ProdutoReturnDTO> ps = repository.findAll(example)
-                    .stream().map(ProdutoReturnDTO::new).
-                    collect(Collectors.toList());
-            json = mapper.writeValueAsString(ps.stream().filter(produtoReturnDTO -> !produtoReturnDTO.getKilled()).collect(Collectors.toList()));
 
+            if (id != null) {
+                // p.setId(id);
+
+//                if (active != null) {
+//                    p.setActive(active ? 1 : 0);
+//
+//                } else {
+//                    p.setActive(1);
+//                }
+
+//                ExampleMatcher matcher = ExampleMatcher.matching()
+//                        .withIgnoreNullValues()
+//                        .withStringMatcher(ExampleMatcher.StringMatcher.EXACT);
+//                Example<Product> example = Example.of(p, matcher);
+//                List<ProdutoReturnDTO> ps = repository.findAll(example).stream().map(ProdutoReturnDTO::new).
+//                        filter(produtoReturnDTO -> produtoReturnDTO.getActive() && !produtoReturnDTO.getKilled()).
+//                        collect(Collectors.toList());
+//                json = mapper.writeValueAsString(ps);
+
+                System.out.println("Entrou aqui");
+                Product prod;
+                if (active == null || !active) {
+                    System.out.println("TEm que entrar" + repository.findById(id));
+                    prod = repository.findById(id).filter(product -> product.getKilled().compareTo(0) == 0 && product.getActive().compareTo(1) == 0).get();
+                    System.out.println(prod);
+                } else {
+                    System.out.println("Não tem que etnra" + id);
+                    prod = repository.findById(id).filter(product -> product.getKilled().compareTo(0) == 0).get();
+                }
+                return ResponseEntity.status(200).body(mapper.writeValueAsString(prod));
+
+            } else {
+                if (name != null) {
+                    p.setName(name);
+                }
+                if (description != null) {
+                    p.setDescription(description);
+                }
+                if (barCode != null) {
+                    p.setBarCode(barCode);
+                }
+                if (brandId != null) {
+                    Brand b = new Brand();
+                    b.setId(brandId);
+                    p.setBrand(b);
+                }
+                if (groupId != null) {
+                    Group g = new Group();
+                    g.setId(groupId);
+                    p.setGroup(g);
+                }
+                if (typeId != null) {
+                    Type t = new Type();
+                    t.setId(typeId);
+                    p.setType(t);
+                }
+                if (muId != null) {
+                    MU m = new MU();
+                    m.setId(muId);
+                    p.setMu(m);
+                }
+                if (active == null || !active) {
+                    p.setActive(1);
+                } else {
+                    p.setActive(0);
+                }
+                ExampleMatcher matcher = ExampleMatcher.matching()
+                        .withIgnoreNullValues()
+                        .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
+                Example<Product> example = Example.of(p, matcher);
+                List<ProdutoReturnDTO> ps = repository.findAll(example)
+                        .stream().map(ProdutoReturnDTO::new).
+                        collect(Collectors.toList());
+                System.out.println(mapper.writeValueAsString(p));
+                json = mapper.writeValueAsString(ps.stream().filter(produtoReturnDTO -> !produtoReturnDTO.getKilled()).collect(Collectors.toList()));
+            }
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.status(404).body("Produto não encontrado " + e.getStackTrace());
+            return ResponseEntity.status(404).body("Produto não encontrado ou desativado");
         }
         return ResponseEntity.status(status.value()).body(json);
     }
 
-    @GetMapping(value = "/{id}", produces = "application/json")
-    public ResponseEntity<String> getProduct(@PathVariable(required = true) Long id) {
-
-        String json;
-
-        try {
-
-            ObjectMapper mapper = new ObjectMapper();
-
-            Product p = repository.findById(id).get();
-
-            json = mapper.writeValueAsString(p);
-            return ResponseEntity.status(200).body(json);
-        } catch (Exception e) {
-
-            return ResponseEntity.status(500).body("Erro ao buscar o produto");
-        }
-    }
+//    @GetMapping(value = "/{id}", produces = "application/json")
+//    public ResponseEntity<String> getProduct(@PathVariable(required = true) Long id) {
+//
+//        String json;
+//
+//        try {
+//
+//            ObjectMapper mapper = new ObjectMapper();
+//
+//            Product p = repository.findById(id).get();
+//
+//            json = mapper.writeValueAsString(p);
+//            return ResponseEntity.status(200).body(json);
+//        } catch (Exception e) {
+//
+//            return ResponseEntity.status(500).body("Erro ao buscar o produto");
+//        }
+//    }
 
 
     @PutMapping(value = "/edit", produces = "text/plain")
@@ -175,7 +210,8 @@ public class ProductController {
     }
 
     @PutMapping(value = "/kill/{id}", produces = "text/plain")
-    public ResponseEntity<String> killProduct(@RequestHeader("Authorization") String token, @PathVariable Long id) {
+    public ResponseEntity<String> killProduct(@RequestHeader("Authorization") String token,
+                                              @PathVariable Long id) {
 
         try {
 
@@ -200,10 +236,8 @@ public class ProductController {
     @PostMapping(value = "", produces = "text/plain")
     public ResponseEntity<String> saveProduct(@RequestHeader("Authorization") String token, HttpServletRequest request,
                                               @RequestBody ProdutoNewDTO produtoNewDTO) {
-        System.out.println("oi esse aqui é outro ");
 
         try {
-            System.out.println("oi é isso aqui viu" + produtoNewDTO.getBarCode().length());
             if (produtoNewDTO.getBarCode().length() < 13 || produtoNewDTO.getBarCode().length() > 14) {
                 return ResponseEntity.status(400).body("código de barras inválido");
             }
@@ -216,7 +250,7 @@ public class ProductController {
             status = HttpStatus.OK;
             logService.save(token, Activity.NEW, "product", p.getId());
 
-            return ResponseEntity.status(status.value()).body(returnProd.toString());
+            return ResponseEntity.status(status.value()).body("Produto: " + returnProd.toString() + " salvo com sucesso!");
         } catch (Exception e) {
 
             String error = "Problema ao salvar o produto";
@@ -227,8 +261,7 @@ public class ProductController {
                     error = "Este código de barras já foi cadastrado no sistema.";
                 }
             }
-            e.printStackTrace();
-            return ResponseEntity.status(404).body(e.getMessage());
+            return ResponseEntity.status(404).body(error);
         }
     }
 }
