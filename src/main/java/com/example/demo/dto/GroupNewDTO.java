@@ -1,7 +1,6 @@
 package com.example.demo.dto;
 
 import com.example.demo.entities.Group;
-import com.fasterxml.jackson.annotation.JsonView;
 
 public class GroupNewDTO extends  DefaultDTO{
 

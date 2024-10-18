@@ -3,6 +3,7 @@ package com.example.demo.controller;
 import com.example.demo.Enum.Activity;
 import com.example.demo.dto.BrandNewDTO;
 import com.example.demo.entities.Brand;
+import com.example.demo.entities.Group;
 import com.example.demo.entities.Product;
 import com.example.demo.repository.BrandRepository;
 import com.example.demo.repository.ProductRepository;
@@ -12,10 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
 import org.springframework.data.domain.ExampleMatcher;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -42,33 +45,40 @@ public class BrandController {
                                            @RequestParam(value = "active", required = false) Boolean active) {
 
         ObjectMapper mapper = new ObjectMapper();
-
+        String body;
         try {
+            //can be empty
+            Brand b = new Brand();
+            b.setId(null);
             if (id == null) {
-                Brand b = new Brand();
-                b.setId(null);
+
                 if (name != null) {
                     b.setDescription(name);
                 }
+                if (active == null || !active) {
+                    b.setActive(1);
+                } else {
+                    b.setActive(0);
+                }
                 ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
                 Example<Brand> example = Example.of(b, matcher);
-                List<Brand> entBrands = repository.findAll(example);
-                if (active) {
-                    return ResponseEntity.status(200).body(mapper.writeValueAsString(entBrands));
-                } else {
-                    return ResponseEntity.status(200).body(mapper.writeValueAsString(entBrands.stream().filter(brand -> brand.getActive().compareTo(1) == 0).collect(Collectors.toList())));
-                }
-            } else {
-                Brand brand;
-                if (active == null || !active) {
-                    brand = repository.findById(id).filter(brand1 -> brand1.getKilled().compareTo(0) == 0 && brand1.getActive().compareTo(1) == 0).get();
-                } else {
-                    brand = repository.findById(id).filter(brand1 -> brand1.getKilled().compareTo(0) == 0).get();
-                }
-                return ResponseEntity.status(200).body(mapper.writeValueAsString(brand));
-            }
+                List<Brand> entGroups = repository.findAll(example).stream().filter(group -> group.getKilled().compareTo(0) == 0).collect(Collectors.toList());
+                return ResponseEntity.status(200).body(mapper.writeValueAsString(entGroups));
 
+            } else {
+                //can be empty
+                try {
+                    b = repository.findById(id).
+                            filter(group -> group.getKilled().compareTo(0) == 0 && group.getActive().compareTo(active ? 0 : 1) == 0).
+                            orElseThrow(() -> new NoSuchElementException("Nenhuma marca encontrada."));
+                    body = mapper.writeValueAsString(b);
+                } catch (Exception e) {
+                    body = e.getMessage();
+                }
+                return ResponseEntity.status(200).body(body);
+            }
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(500).body(e.toString());
         }
     }
@@ -91,50 +101,47 @@ public class BrandController {
         }
     }
 
-    @PutMapping(value = "/{id}", produces = "text/plain")
-    public ResponseEntity<String> stateBrand(@RequestHeader("Authorization") String token,
-                                             @PathVariable Long id) {
-
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            Brand b = new Brand();
-            b.setId(id);
-            List<Product> ps = productRepository.findAll().stream().filter(product -> Objects.equals(product.getBrandId(), id) && product.getKilled().compareTo(0) == 0).collect(Collectors.toList());
-
-            if (!ps.isEmpty()) {
-                return ResponseEntity.status(400).body("Marca está em uso!");
-            } else {
-
-                if (repository.findById(id).isPresent()) {
-                    Brand brand = repository.findById(id).get();
-
-                    brand.setActive(brand.getActive().compareTo(1) == 0 ? 0 : 1);
-                    brand.setDescription(brand.getDescription().toUpperCase());
-                    repository.save(brand);
-
-                    logService.save(token, Activity.EDIT_STATE, "product_brand", brand.getId());
-
-                    return ResponseEntity.status(200).body("Marca alterada com sucesso");
-                } else {
-                    return ResponseEntity.status(404).body("Marca não encontrada");
-                }
-            }
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(e.getMessage());
-        }
-    }
-
     @PutMapping(value = "/edit", produces = "text/plain")
     public ResponseEntity<String> editBrand(@RequestHeader("Authorization") String token,
                                             @RequestBody Brand brand) {
         try {
-
+            HttpStatus status;
+            String body;
+            Brand tempB = repository.findById(brand.getId()).orElseThrow(() -> new NoSuchElementException("Marca não encontrada"));
             brand.setDescription(brand.getDescription().toUpperCase());
-            repository.save(brand);
-
-            logService.save(token, Activity.EDIT, "product_brand", brand.getId());
-
-            return ResponseEntity.ok("Marca editada com sucesso");
+            if (tempB.getActive().compareTo(1) == 0 && brand.getActive().compareTo(0) == 0) {
+                Brand b = new Brand();
+                b.setId(brand.getId());
+                List<Product> ps = productRepository.findAll().stream().
+                        filter(product -> Objects.equals(product.getBrandId(), brand.getId()) && product.getKilled().compareTo(0) == 0).
+                        collect(Collectors.toList());
+                if (!ps.isEmpty()) {
+                    status = HttpStatus.OK;
+                    body = "Marca está em uso.";
+                } else {
+                    brand.setActive(0);
+                    repository.save(brand);
+                    logService.save(token, Activity.EDIT_STATE, "product_brand", brand.getId());
+                    logService.save(token, Activity.EDIT, "product_brand", brand.getId());
+                    status = HttpStatus.OK;
+                    body = "Marca editada e desativada com sucesso!";
+                }
+            } else if (tempB.getActive().compareTo(0) == 0 && brand.getActive().compareTo(1) == 0) {
+                brand.setActive(1);
+                repository.save(brand);
+                logService.save(token, Activity.EDIT_STATE, "product_brand", brand.getId());
+                logService.save(token, Activity.EDIT, "product_brand", brand.getId());
+                status = HttpStatus.OK;
+                body = "Marca editada e ativada com sucesso!";
+            } else {
+                repository.save(brand);
+                logService.save(token, Activity.EDIT, "product_brand", brand.getId());
+                status = HttpStatus.OK;
+                body = "Marca editada com sucesso!";
+            }
+            return ResponseEntity.status(status.value()).body(body);
+        } catch (NoSuchElementException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
         } catch (Exception e) {
             return ResponseEntity.status(500).body(e.getMessage());
         }

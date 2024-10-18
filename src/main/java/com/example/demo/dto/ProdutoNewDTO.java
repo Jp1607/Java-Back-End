@@ -3,11 +3,6 @@ package com.example.demo.dto;
 import com.example.demo.entities.*;
 import com.fasterxml.jackson.annotation.JsonView;
 
-import javax.persistence.Column;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-
 public class ProdutoNewDTO extends DefaultDTO{
 
     @JsonView

@@ -12,7 +12,7 @@ public class DefaultEntities {
     @Column(name = "active", columnDefinition="int(1)" )
     protected Integer active;
 
-    @Column(name = "killed", columnDefinition="int(1)")
+    @Column(name = "killed", columnDefinition="int(1) default'0'")
     protected Integer killed;
 
     public Long getId() {
