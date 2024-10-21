@@ -1,8 +1,5 @@
 package com.example.demo.entities;
-
-
 import com.example.demo.dto.ProdutoNewDTO;
-
 import javax.persistence.*;
 
 @Entity
@@ -17,6 +14,15 @@ public class Product extends DefaultEntities {
 
     @Column(name = "bar_code", unique = true)
     private String barCode;
+
+    @Column(name = "current_stock")
+    private Integer currentStock;
+
+    @Column(name = "price")
+    private Long price;
+
+    @Column(name = "negative_stock")
+    private Boolean negativeStock;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id", referencedColumnName = "id")
@@ -105,6 +111,10 @@ public class Product extends DefaultEntities {
         return type;
     }
 
+    public Long getTypeId() {
+        return type.id;
+    }
+
     public void setType(Type type) {
         this.type = type;
     }
@@ -115,6 +125,10 @@ public class Product extends DefaultEntities {
 
     public void setMu(MU mu) {
         this.mu = mu;
+    }
+
+    public Long getMUid() {
+        return mu.id;
     }
 
     @Override
