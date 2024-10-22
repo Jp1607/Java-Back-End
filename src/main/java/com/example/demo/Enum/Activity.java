@@ -5,6 +5,7 @@ public enum Activity {
     NEW("adicinou"),
     DELETE("removeu"),
     EDIT_STATE("editou estado"),
+    SELL("comprou"),
     LOGIN("logou"),
     LOGOUT("deslogou");
 

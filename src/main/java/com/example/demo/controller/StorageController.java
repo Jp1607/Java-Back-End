@@ -47,7 +47,7 @@ public class StorageController {
                         collect(Collectors.toList()));
             } else {
                 if (name != null) {
-                    storageCenter.setName(name);
+                    storageCenter.setDescription(name);
                 }
                 ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
                 Example<StorageCenter> example = Example.of(storageCenter, matcher);
@@ -71,7 +71,7 @@ public class StorageController {
 
         try {
             StorageCenter storageCenter = new StorageCenter(storageCenterDTO);
-            storageCenter.setName(storageCenter.getName().toUpperCase());
+            storageCenter.setDescription(storageCenter.getDescription().toUpperCase());
             storageRepository.save(storageCenter);
             logService.save(token, Activity.NEW, "storage_center", storageCenter.getId());
             return ResponseEntity.status(200).body("Centro de armazenamento salvo com sucesso!");

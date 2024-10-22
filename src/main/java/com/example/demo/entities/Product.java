@@ -16,13 +16,13 @@ public class Product extends DefaultEntities {
     private String barCode;
 
     @Column(name = "current_stock")
-    private Integer currentStock;
+    private Long currentStock;
 
     @Column(name = "price")
     private Long price;
 
     @Column(name = "negative_stock")
-    private Boolean negativeStock;
+    private Integer negativeStock;
 
     @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JoinColumn(name = "brand_id", referencedColumnName = "id")
@@ -100,7 +100,11 @@ public class Product extends DefaultEntities {
     }
 
     public Long getGroupId() {
-        return group.id;
+        if(group != null){
+            return group.id;
+        } else {
+            return 0L;
+        }
     }
 
     public void setGroup(Group group) {
@@ -112,7 +116,11 @@ public class Product extends DefaultEntities {
     }
 
     public Long getTypeId() {
-        return type.id;
+        if(type != null){
+            return type.id;
+        } else {
+            return 0L;
+        }
     }
 
     public void setType(Type type) {
@@ -128,7 +136,35 @@ public class Product extends DefaultEntities {
     }
 
     public Long getMUid() {
-        return mu.id;
+        if(mu != null){
+            return mu.id;
+        } else {
+            return 0L;
+        }
+    }
+
+    public Long getCurrentStock() {
+        return currentStock;
+    }
+
+    public void setCurrentStock(Long currentStock) {
+        this.currentStock = currentStock;
+    }
+
+    public Long getPrice() {
+        return price;
+    }
+
+    public void setPrice(Long price) {
+        this.price = price;
+    }
+
+    public Integer getNegativeStock() {
+        return negativeStock;
+    }
+
+    public void setNegativeStock(Integer negativeStock) {
+        this.negativeStock = negativeStock;
     }
 
     @Override
@@ -144,6 +180,8 @@ public class Product extends DefaultEntities {
                 ", barCode='" + barCode + '\'' +
                 ", description='" + description + '\'' +
                 ", name='" + name + '\'' +
+                ", currentStock='" + currentStock + '\'' +
+                ", price='" + price + '\'' +
                 '}';
     }
 }

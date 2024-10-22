@@ -9,15 +9,17 @@ import javax.persistence.Table;
 @Table(name = "storage_center")
 public class StorageCenter extends DefaultEntities{
     @Column(name = "description")
-    private String name;
-    public String getName() {
-        return name;
+    private String description;
+    public String getDescription() {
+        return description;
     }
-    public void setName(String name) {
-        this.name = name;
+    public void setDescription(String name) {
+        this.description = name;
     }
+
+    public StorageCenter(){}
     public StorageCenter(StorageCenterDTO storageCenterDTO) {
-        this.name = storageCenterDTO.getDescription();
+        this.description = storageCenterDTO.getDescription();
         this.active = storageCenterDTO.getActive() ? 1 : 0;
         this.killed = storageCenterDTO.getKilled() ? 1 : 0;
     }
