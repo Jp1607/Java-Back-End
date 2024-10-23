@@ -80,4 +80,12 @@ public class StockFlow {
     public void setDate(Date date) {
         this.date = date;
     }
+
+    public StorageCenter getStorageCenter() {
+        return storageCenter;
+    }
+
+    public void setStorageCenter(StorageCenter storageCenter) {
+        this.storageCenter = storageCenter;
+    }
 }

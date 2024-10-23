@@ -34,11 +34,10 @@ public class Sale {
     private User user;
 
     public Sale(){}
-    public Sale(  Date date, Payment payment,  User user, Double total) {
+    public Sale(  Date date, Payment payment,  User user) {
         this.date = date;
         this.payment = payment;
         this.user = user;
-        this.total = total;
     }
 
     public void setPayment(Payment payment) {

@@ -55,4 +55,15 @@ public class SalesItemsDTO {
     public void setStorageCenter(StorageCenter storageCenter) {
         this.storageCenter = storageCenter;
     }
+
+    @Override
+    public String toString() {
+        return "SalesItemsDTO{" +
+                "quantity=" + quantity +
+                ", storageCenter=" + storageCenter +
+                ", product=" + product +
+                ", discountType=" + discountType +
+                ", discountValue=" + discountValue +
+                '}';
+    }
 }

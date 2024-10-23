@@ -1,9 +1,6 @@
 package com.example.demo.entities;
-
 import com.example.demo.Enum.Discount;
 import com.example.demo.dto.SalesItemsDTO;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import javax.persistence.*;
 
 @Entity
@@ -15,7 +12,7 @@ public class SalesItems {
     @Column(name = "id")
     private Long id = 0L;
 
-    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
+    @OneToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "sales_id", referencedColumnName = "id")
     private Sale sale;
 
@@ -28,7 +25,7 @@ public class SalesItems {
     private StorageCenter storageCenter;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "discount_type", columnDefinition = "varchar(50)", length = 50, nullable = false)
+    @Column(name = "discount_type", columnDefinition = "varchar(50)", length = 50, nullable = true)
     private Discount discount;
 
     @Column(name = "quantity")
@@ -43,12 +40,15 @@ public class SalesItems {
     public SalesItems() {
     }
 
-    public SalesItems(SalesItemsDTO salesItemsDTO) {
-        this.product = salesItemsDTO.getProduct();
+    public SalesItems(SalesItemsDTO salesItemsDTO, Product product) {
+        this.product = product;
+        System.out.println("SalesItems" + salesItemsDTO);
+        System.out.println("product" + product);
+        System.out.println(product.getPrice() + salesItemsDTO.getDiscountValue() + salesItemsDTO.getQuantity());
         System.out.println("calculo: " + (product.getPrice()- salesItemsDTO.getDiscountValue()) + ((product.getPrice()- salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity()));
         this.subTotal = salesItemsDTO.getDiscountType() == Discount.DECIMAL ? ((product.getPrice() - salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity()) : ((product.getPrice() - product.getPrice() / 100 * salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity());
         this.discount = salesItemsDTO.getDiscountType();
-        this.prodValue = salesItemsDTO.getProduct().getPrice();
+        this.prodValue = product.getPrice();
         this.qnt = salesItemsDTO.getQuantity();
         this.storageCenter = salesItemsDTO.getStorageCenter();
 
