@@ -32,13 +32,14 @@ public class StorageController {
 
     @GetMapping(value = "", produces = "application/json")
     public ResponseEntity<String> getStorage(@RequestParam(value = "id", required = false) Long id,
-                                           @RequestParam(value = "name") String name,
-                                           @RequestParam(value = "active") Boolean active) {
+                                           @RequestParam(value = "name", required = false) String name,
+                                           @RequestParam(value = "active", required = false) Boolean active) {
 
         String body;
         HttpStatus status;
         try {
             StorageCenter storageCenter = new StorageCenter();
+            storageCenter.setId(null);
             ObjectMapper mapper = new ObjectMapper();
             if (id != null) {
                 body = mapper.writeValueAsString(storageRepository.
