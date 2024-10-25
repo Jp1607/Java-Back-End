@@ -56,24 +56,6 @@ public class ProductController {
             p.setId(null);
 
             if (id != null) {
-                // p.setId(id);
-
-//                if (active != null) {
-//                    p.setActive(active ? 1 : 0);
-//
-//                } else {
-//                    p.setActive(1);
-//                }
-
-//                ExampleMatcher matcher = ExampleMatcher.matching()
-//                        .withIgnoreNullValues()
-//                        .withStringMatcher(ExampleMatcher.StringMatcher.EXACT);
-//                Example<Product> example = Example.of(p, matcher);
-//                List<ProdutoReturnDTO> ps = repository.findAll(example).stream().map(ProdutoReturnDTO::new).
-//                        filter(produtoReturnDTO -> produtoReturnDTO.getActive() && !produtoReturnDTO.getKilled()).
-//                        collect(Collectors.toList());
-//                json = mapper.writeValueAsString(ps);
-
                 System.out.println("Entrou aqui");
                 Product prod;
                 if (active == null || !active) {
@@ -137,26 +119,6 @@ public class ProductController {
         }
         return ResponseEntity.status(status.value()).body(json);
     }
-
-//    @GetMapping(value = "/{id}", produces = "application/json")
-//    public ResponseEntity<String> getProduct(@PathVariable(required = true) Long id) {
-//
-//        String json;
-//
-//        try {
-//
-//            ObjectMapper mapper = new ObjectMapper();
-//
-//            Product p = repository.findById(id).get();
-//
-//            json = mapper.writeValueAsString(p);
-//            return ResponseEntity.status(200).body(json);
-//        } catch (Exception e) {
-//
-//            return ResponseEntity.status(500).body("Erro ao buscar o produto");
-//        }
-//    }
-
 
     @PutMapping(value = "/edit", produces = "text/plain")
     public ResponseEntity<String> editProduct(@RequestHeader("Authorization") String token, HttpServletRequest request, @RequestBody Product product) {
