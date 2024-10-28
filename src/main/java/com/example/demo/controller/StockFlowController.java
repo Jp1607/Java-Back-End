@@ -1,6 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.Enum.Flow;
+import com.example.demo.dto.StockFlowDTO;
 import com.example.demo.entities.StockFlow;
 import com.example.demo.entities.StorageCenter;
 import com.example.demo.repository.StockFlowRepository;
@@ -13,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping(value = "/stock_flow")
@@ -41,18 +44,25 @@ public class StockFlowController {
             }
             ExampleMatcher matcher = ExampleMatcher.matching().withIgnoreNullValues().withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
             Example<StockFlow> example = Example.of(stockFlow, matcher);
-            String body = mapper.writeValueAsString(stockFlowRepository.findAll(example).stream().filter(stockFlow1 -> {
-                if (initialDate != null && finalDate != null && initialDate.compareTo(finalDate) == 0) {
-                    return (stockFlow1.getDate().compareTo(initialDate) == 0);
-                } else if (initialDate != null && finalDate == null) {
-                    return (stockFlow1.getDate().after(initialDate));
-                } else if (initialDate == null && finalDate != null) {
-                    return (stockFlow1.getDate().before(finalDate));
+
+            List<StockFlowDTO> listFlow =  stockFlowRepository.findAll(example).stream().filter(stockFlow1 -> {
+                if(initialDate == null && finalDate == null) {
+                    return true;
+                } else if (initialDate != null && finalDate != null) {
+                  if (initialDate.compareTo(finalDate) < 0){
+                      return (stockFlow1.getDate().after(initialDate) && stockFlow1.getDate().before(finalDate));
+                  } else if (initialDate.compareTo(finalDate) == 0) {
+                      return stockFlow1.getDate().compareTo(initialDate) == 0;
+                  }
                 } else if (initialDate != null) {
-                    return (stockFlow1.getDate().before(finalDate) && stockFlow1.getDate().after(initialDate));
-                } else
-                    return false;
-            }));
+                    return stockFlow1.getDate().after(initialDate);
+                } else {
+                    return stockFlow1.getDate().before(finalDate);
+                }
+                return false;
+            }).map(StockFlowDTO::new).collect(Collectors.toList());
+            String body = mapper.writeValueAsString(listFlow);
+
             return ResponseEntity.status(200).body(body);
         } catch (Exception e) {
             e.printStackTrace();

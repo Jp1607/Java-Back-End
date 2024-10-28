@@ -1,7 +1,6 @@
 package com.example.demo.controller;
 import com.example.demo.Enum.Activity;
 import com.example.demo.dto.StorageCenterDTO;
-import com.example.demo.entities.Product;
 import com.example.demo.entities.StorageCenter;
 import com.example.demo.repository.ProductRepository;
 import com.example.demo.repository.StorageRepository;
@@ -33,7 +32,7 @@ public class StorageController {
     @GetMapping(value = "", produces = "application/json")
     public ResponseEntity<String> getStorage(@RequestParam(value = "id", required = false) Long id,
                                            @RequestParam(value = "name", required = false) String name,
-                                           @RequestParam(value = "active", required = false) Boolean active) {
+                                           @RequestParam(value = "active", defaultValue = "true", required = false) Boolean active) {
 
         String body;
         HttpStatus status;
@@ -54,7 +53,7 @@ public class StorageController {
                 Example<StorageCenter> example = Example.of(storageCenter, matcher);
                 body = mapper.writeValueAsString(storageRepository.
                         findAll(example).stream().
-                        filter(sC -> sC.getKilled().compareTo(0) == 0 && sC.getActive().compareTo(active ? 0 : 1) == 0).
+                        filter(sC -> sC.getKilled().compareTo(0) == 0 && sC.getActive().compareTo(active ? 1 : 0) == 0).
                         collect(Collectors.toList()));
             }
             status = HttpStatus.OK;

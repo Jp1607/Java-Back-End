@@ -42,10 +42,11 @@ public class BrandController {
     @GetMapping(value = "", produces = "application/json")
     public ResponseEntity<String> getBrand(@RequestParam(value = "id", required = false) Long id,
                                            @RequestParam(value = "name", required = false) String name,
-                                           @RequestParam(value = "active", required = false) Boolean active) {
+                                           @RequestParam(value = "active", defaultValue = "false", required = false) Boolean active) {
 
+        HttpStatus status;
         ObjectMapper mapper = new ObjectMapper();
-        String body;
+        String body = "";
         try {
             Brand b = new Brand();
             b.setId(null);
@@ -66,15 +67,18 @@ public class BrandController {
             } else {
                 try {
                     b = repository.findById(id).
-                            filter(group -> group.getKilled().compareTo(0) == 0 && group.getActive().compareTo(active ? 0 : 1) == 0).
+                            filter(brand -> brand.getKilled().compareTo(0) == 0 && brand.getActive().compareTo(active ? 0 : 1) == 0).
                             orElseThrow(() -> new NoSuchElementException("Nenhuma marca encontrada."));
                     body = mapper.writeValueAsString(b);
+                    status = HttpStatus.OK;
                 } catch (Exception e) {
-                    body = e.getMessage();
+                    body = e.getClass().getName();
+                    status = HttpStatus.NOT_FOUND;
                 }
-                return ResponseEntity.status(200).body(body);
+                return ResponseEntity.status(status).body(body);
             }
         } catch (Exception e) {
+            System.out.println("DEU ERRADO DMS 2");
             e.printStackTrace();
             return ResponseEntity.status(500).body(e.toString());
         }
