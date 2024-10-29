@@ -1,7 +1,10 @@
 package com.example.demo.entities;
+
 import com.example.demo.Enum.Discount;
 import com.example.demo.dto.SalesItemsDTO;
+
 import javax.persistence.*;
+import java.util.Objects;
 
 @Entity
 @Table
@@ -40,17 +43,13 @@ public class SalesItems {
     public SalesItems() {
     }
 
-    public SalesItems(SalesItemsDTO salesItemsDTO, Product product) {
+    public SalesItems(SalesItemsDTO salesItemsDTO, Product product, StorageCenter storageCenter) {
         this.product = product;
-        System.out.println("SalesItems" + salesItemsDTO);
-        System.out.println("product" + product);
-        System.out.println(product.getPrice() + salesItemsDTO.getDiscountValue() + salesItemsDTO.getQuantity());
-        System.out.println("calculo: " + (product.getPrice()- salesItemsDTO.getDiscountValue()) + ((product.getPrice()- salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity()));
-        this.subTotal = salesItemsDTO.getDiscountType() == Discount.DECIMAL ? ((product.getPrice() - salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity()) : ((product.getPrice() - product.getPrice() / 100 * salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity());
-        this.discount = salesItemsDTO.getDiscountType();
+        this.subTotal = Objects.equals(salesItemsDTO.getDiscountType(), Discount.DECIMAL.name()) ? ((product.getPrice() - salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity()) : ((product.getPrice() - product.getPrice() / 100 * salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity());
+        this.discount = Discount.valueOf(salesItemsDTO.getDiscountType());
         this.prodValue = product.getPrice();
         this.qnt = salesItemsDTO.getQuantity();
-        this.storageCenter = salesItemsDTO.getStorageCenter();
+        this.storageCenter = storageCenter;
 
     }
 

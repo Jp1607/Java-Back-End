@@ -8,13 +8,24 @@ public class SalesItemsDTO {
 
     private Long quantity;
 
-    private StorageCenter storageCenter;
+    private Long storageCenterId;
 
-    private Product product;
+    private Long productId;
 
-    private Discount discountType;
+    private String discountType;
 
     private Double discountValue;
+
+    @Override
+    public String toString() {
+        return "SalesItemsDTO{" +
+                "quantity=" + quantity +
+                ", storageCenterId=" + storageCenterId +
+                ", productId=" + productId +
+                ", discountType='" + discountType + '\'' +
+                ", discountValue=" + discountValue +
+                '}';
+    }
 
     public Long getQuantity() {
         return quantity;
@@ -24,19 +35,27 @@ public class SalesItemsDTO {
         this.quantity = quantity;
     }
 
-    public Product getProduct() {
-        return product;
+    public Long getStorageCenterId() {
+        return storageCenterId;
     }
 
-    public void setProduct(Product product) {
-        this.product = product;
+    public void setStorageCenterId(Long storageCenterId) {
+        this.storageCenterId = storageCenterId;
     }
 
-    public Discount getDiscountType() {
+    public Long getProductId() {
+        return productId;
+    }
+
+    public void setProductId(Long productId) {
+        this.productId = productId;
+    }
+
+    public String getDiscountType() {
         return discountType;
     }
 
-    public void setDiscountType(Discount discountType) {
+    public void setDiscountType(String discountType) {
         this.discountType = discountType;
     }
 
@@ -46,24 +65,5 @@ public class SalesItemsDTO {
 
     public void setDiscountValue(Double discountValue) {
         this.discountValue = discountValue;
-    }
-
-    public StorageCenter getStorageCenter() {
-        return storageCenter;
-    }
-
-    public void setStorageCenter(StorageCenter storageCenter) {
-        this.storageCenter = storageCenter;
-    }
-
-    @Override
-    public String toString() {
-        return "SalesItemsDTO{" +
-                "quantity=" + quantity +
-                ", storageCenter=" + storageCenter +
-                ", product=" + product +
-                ", discountType=" + discountType +
-                ", discountValue=" + discountValue +
-                '}';
     }
 }

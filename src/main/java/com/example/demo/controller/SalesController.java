@@ -25,6 +25,9 @@ public class SalesController {
     private ProductRepository productRepository;
 
     @Autowired
+    private StorageRepository storageRepository;
+
+    @Autowired
     private StockFlowRepository stockFlowRepository;
 
     @Autowired
@@ -52,11 +55,12 @@ public class SalesController {
             double saleTotal = 0;
             sale = saleRepository.save(sale);
             for (SalesItemsDTO salesItemsDTO : salesItemsListDTO) {
-                Product p = productRepository.findById(salesItemsDTO.getProduct().getId()).get();
+                Product p = productRepository.findById(salesItemsDTO.getProductId()).get();
+                StorageCenter s = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
                 if (p.getCurrentStock().compareTo(salesItemsDTO.getQuantity()) < 0 && p.getNegativeStock().compareTo(0) == 0) {
                     return ResponseEntity.status(200).body("Sem produtos suficientes no estoque");
                 } else {
-                    SalesItems salesItems = new SalesItems(salesItemsDTO, p);
+                    SalesItems salesItems = new SalesItems(salesItemsDTO, p, s);
                     StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), p, date, Flow.EXIT, salesItems.getQnt());
                     saleTotal += salesItems.getSubTotal();
                     salesItems.setSales(sale);
@@ -80,14 +84,15 @@ public class SalesController {
                                       @RequestBody SalesItemsDTO salesItemsDTO) {
 
         try {
-            Product product = productRepository.findById(salesItemsDTO.getProduct().getId()).get();
+            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
+            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
 
             Date date = new Date();
             HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
             User user = new User();
             user.setId(http.getUserDetails().getId());
 
-            SalesItems salesItems = new SalesItems(salesItemsDTO, product);
+            SalesItems salesItems = new SalesItems(salesItemsDTO, product, storageCenter);
             StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), product, date, Flow.ENTRANCE, salesItems.getQnt());
             stockFlowRepository.save(stockFlow);
             product.setCurrentStock(product.getCurrentStock() + salesItems.getQnt());
