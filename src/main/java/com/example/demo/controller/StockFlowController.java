@@ -27,10 +27,12 @@ public class StockFlowController {
     @GetMapping(value = "", produces = "application/json")
     public ResponseEntity<String> listFlow(@RequestParam(value = "flow", required = false) Flow flow,
                                            @RequestParam(value = "storage", required = false) Long storageCenterId,
-                                           @RequestParam(value = "initialDate", required = false) @DateTimeFormat(pattern = "dd/mm/yyyy") Date initialDate,
-                                           @RequestParam(value = "finalDate", required = false) @DateTimeFormat(pattern = "dd/mm/yyyy") Date finalDate) {
+                                           @RequestParam(value = "initialDate", required = false) @DateTimeFormat(pattern = "yyyy-mm-dd") Date initialDate,
+                                           @RequestParam(value = "finalDate", required = false) @DateTimeFormat(pattern = "yyyy-mm-dd") Date finalDate) {
 
         try {
+            System.out.println("data 1" + finalDate);
+            System.out.println(initialDate);
             StockFlow stockFlow = new StockFlow();
             stockFlow.setId(null);
             ObjectMapper mapper = new ObjectMapper();

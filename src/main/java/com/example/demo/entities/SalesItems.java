@@ -35,7 +35,7 @@ public class SalesItems {
     private Long qnt;
 
     @Column(name = "product_value")
-    private Long prodValue;
+    private Double prodValue;
 
     @Column(name = "sub_total")
     private Double subTotal;
@@ -43,14 +43,13 @@ public class SalesItems {
     public SalesItems() {
     }
 
-    public SalesItems(SalesItemsDTO salesItemsDTO, Product product, StorageCenter storageCenter) {
+    public SalesItems(SalesItemsDTO salesItemsDTO, Product product, StorageCenter storageCenter, Discount discount, Double discountValue) {
         this.product = product;
-        this.subTotal = Objects.equals(salesItemsDTO.getDiscountType(), Discount.DECIMAL.name()) ? ((product.getPrice() - salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity()) : ((product.getPrice() - product.getPrice() / 100 * salesItemsDTO.getDiscountValue()) * salesItemsDTO.getQuantity());
-        this.discount = Discount.valueOf(salesItemsDTO.getDiscountType());
+        this.subTotal = Objects.equals(discount, Discount.DECIMAL.name()) ? ((product.getPrice() - discountValue) * salesItemsDTO.getQuantity()) : ((product.getPrice() - product.getPrice() / 100 * discountValue) * salesItemsDTO.getQuantity());
+        this.discount = Discount.valueOf(discount.name());
         this.prodValue = product.getPrice();
         this.qnt = salesItemsDTO.getQuantity();
         this.storageCenter = storageCenter;
-
     }
 
     public Long getId() {
@@ -101,11 +100,11 @@ public class SalesItems {
         this.qnt = qnt;
     }
 
-    public Long getProdValue() {
+    public Double getProdValue() {
         return prodValue;
     }
 
-    public void setProdValue(Long prodValue) {
+    public void setProdValue(Double prodValue) {
         this.prodValue = prodValue;
     }
 

@@ -108,7 +108,7 @@ public class    ProductController {
                         .withStringMatcher(ExampleMatcher.StringMatcher.CONTAINING);
                 Example<Product> example = Example.of(p, matcher);
                 List<ProdutoReturnDTO> ps = repository.findAll(example)
-                        .stream().map(ProdutoReturnDTO::new).
+                        .stream().map(ProdutoReturnDTO::new).limit(10).
                         collect(Collectors.toList());
                 System.out.println(mapper.writeValueAsString(p));
                 json = mapper.writeValueAsString(ps.stream().filter(produtoReturnDTO -> !produtoReturnDTO.getKilled()).collect(Collectors.toList()));

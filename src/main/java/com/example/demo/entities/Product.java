@@ -19,7 +19,7 @@ public class Product extends DefaultEntities {
     private Long currentStock;
 
     @Column(name = "price")
-    private Long price;
+    private Double price;
 
     @Column(name = "negative_stock")
     private Integer negativeStock;
@@ -151,11 +151,11 @@ public class Product extends DefaultEntities {
         this.currentStock = currentStock;
     }
 
-    public Long getPrice() {
+    public Double getPrice() {
         return price;
     }
 
-    public void setPrice(Long price) {
+    public void setPrice(Double price) {
         this.price = price;
     }
 

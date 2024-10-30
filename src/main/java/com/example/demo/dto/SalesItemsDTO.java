@@ -12,20 +12,20 @@ public class SalesItemsDTO {
 
     private Long productId;
 
-    private String discountType;
+//    private String discountType;
+//
+//    private Double discountValue;
 
-    private Double discountValue;
-
-    @Override
-    public String toString() {
-        return "SalesItemsDTO{" +
-                "quantity=" + quantity +
-                ", storageCenterId=" + storageCenterId +
-                ", productId=" + productId +
-                ", discountType='" + discountType + '\'' +
-                ", discountValue=" + discountValue +
-                '}';
-    }
+//    @Override
+//    public String toString() {
+//        return "SalesItemsDTO{" +
+//                "quantity=" + quantity +
+//                ", storageCenterId=" + storageCenterId +
+//                ", productId=" + productId +
+//                ", discountType='" + discountType + '\'' +
+//                ", discountValue=" + discountValue +
+//                '}';
+//    }
 
     public Long getQuantity() {
         return quantity;
@@ -51,19 +51,19 @@ public class SalesItemsDTO {
         this.productId = productId;
     }
 
-    public String getDiscountType() {
-        return discountType;
-    }
-
-    public void setDiscountType(String discountType) {
-        this.discountType = discountType;
-    }
-
-    public Double getDiscountValue() {
-        return discountValue;
-    }
-
-    public void setDiscountValue(Double discountValue) {
-        this.discountValue = discountValue;
-    }
+//    public String getDiscountType() {
+//        return discountType;
+//    }
+//
+//    public void setDiscountType(String discountType) {
+//        this.discountType = discountType;
+//    }
+//
+//    public Double getDiscountValue() {
+//        return discountValue;
+//    }
+//
+//    public void setDiscountValue(Double discountValue) {
+//        this.discountValue = discountValue;
+//    }
 }

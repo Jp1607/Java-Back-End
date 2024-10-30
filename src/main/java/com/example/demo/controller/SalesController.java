@@ -1,5 +1,6 @@
 package com.example.demo.controller;
 import com.example.demo.Enum.Activity;
+import com.example.demo.Enum.Discount;
 import com.example.demo.Enum.Flow;
 import com.example.demo.Enum.Payment;
 import com.example.demo.dto.SalesItemsDTO;
@@ -42,6 +43,8 @@ public class SalesController {
     @PostMapping(value = "/sell", produces = "text/plain")
     public ResponseEntity<String> sell(@RequestHeader("Authorization") String token,
                                        @RequestBody ArrayList<SalesItemsDTO> salesItemsListDTO,
+                                       @RequestParam(value = "discount") Discount discount,
+                                       @RequestParam(value = "discountValue") Double discountValue,
                                        @RequestParam(value = "payment") Payment payment) {
 
         try {
@@ -60,11 +63,12 @@ public class SalesController {
                 if (p.getCurrentStock().compareTo(salesItemsDTO.getQuantity()) < 0 && p.getNegativeStock().compareTo(0) == 0) {
                     return ResponseEntity.status(200).body("Sem produtos suficientes no estoque");
                 } else {
-                    SalesItems salesItems = new SalesItems(salesItemsDTO, p, s);
+                    SalesItems salesItems = new SalesItems(salesItemsDTO, p, s, discount, discountValue);
                     StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), p, date, Flow.EXIT, salesItems.getQnt());
                     saleTotal += salesItems.getSubTotal();
                     salesItems.setSales(sale);
                     stockFlowRepository.save(stockFlow);
+                    salesItems.setDiscount(discount);
                     salesItemsRepository.save(salesItems);
                     p.setCurrentStock(p.getCurrentStock() - salesItems.getQnt());
                     productRepository.save(p);
@@ -79,29 +83,29 @@ public class SalesController {
         }
     }
 
-    @PostMapping(value = "/buy", produces = "text/plain")
-    public ResponseEntity<String> buy(@RequestHeader("Authorization") String token,
-                                      @RequestBody SalesItemsDTO salesItemsDTO) {
-
-        try {
-            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
-            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
-
-            Date date = new Date();
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
-            User user = new User();
-            user.setId(http.getUserDetails().getId());
-
-            SalesItems salesItems = new SalesItems(salesItemsDTO, product, storageCenter);
-            StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), product, date, Flow.ENTRANCE, salesItems.getQnt());
-            stockFlowRepository.save(stockFlow);
-            product.setCurrentStock(product.getCurrentStock() + salesItems.getQnt());
-            productRepository.save(product);
-            logService.save(token, Activity.BUY, "stock_flow", null);
-            return ResponseEntity.status(200).body("Sucesso");
-
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-    }
+//    @PostMapping(value = "/buy", produces = "text/plain")
+//    public ResponseEntity<String> buy(@RequestHeader("Authorization") String token,
+//                                      @RequestBody SalesItemsDTO salesItemsDTO) {
+//
+//        try {
+//            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
+//            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
+//
+//            Date date = new Date();
+//            HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
+//            User user = new User();
+//            user.setId(http.getUserDetails().getId());
+//
+//            SalesItems salesItems = new SalesItems(salesItemsDTO, product, storageCenter);
+//            StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), product, date, Flow.ENTRANCE, salesItems.getQnt());
+//            stockFlowRepository.save(stockFlow);
+//            product.setCurrentStock(product.getCurrentStock() + salesItems.getQnt());
+//            productRepository.save(product);
+//            logService.save(token, Activity.BUY, "stock_flow", null);
+//            return ResponseEntity.status(200).body("Sucesso");
+//
+//        } catch (Exception e) {
+//            throw new RuntimeException(e);
+//        }
+//    }
 }

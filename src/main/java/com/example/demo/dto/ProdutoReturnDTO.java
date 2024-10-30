@@ -3,7 +3,7 @@ package com.example.demo.dto;
 import com.example.demo.entities.Product;
 import com.fasterxml.jackson.annotation.JsonView;
 
-public class ProdutoReturnDTO extends DefaultDTO{
+public class ProdutoReturnDTO extends DefaultDTO {
 
     @JsonView
     private Long id;
@@ -26,15 +26,24 @@ public class ProdutoReturnDTO extends DefaultDTO{
     @JsonView
     private String muDesc;
 
+    @JsonView
+    private Long currentStock;
+
+    @JsonView
+    private Double price;
+
+    @JsonView
+    private String negativeStock;
+
     public ProdutoReturnDTO(Product p) {
         this.id = p.getId();
         this.name = p.getName();
-        if (p.getActive() != null){
+        if (p.getActive() != null) {
             this.active = p.getActive() == 1;
         } else {
             this.active = false;
         }
-        if (p.getKilled() != null){
+        if (p.getKilled() != null) {
             this.killed = p.getKilled() == 1;
         } else {
             this.killed = false;
@@ -52,6 +61,11 @@ public class ProdutoReturnDTO extends DefaultDTO{
         }
         if (p.getMu() != null) {
             this.muDesc = p.getMu().getDescription();
+        }
+        this.price = p.getPrice();
+        this.currentStock = p.getCurrentStock();
+        if (p.getNegativeStock() != null) {
+            this.negativeStock = p.getNegativeStock().compareTo(1) == 0 ? "Permite" : "Não permite";
         }
     }
 
