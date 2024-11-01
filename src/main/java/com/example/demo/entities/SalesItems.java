@@ -42,14 +42,26 @@ public class SalesItems {
 
     public SalesItems() {
     }
-
-    public SalesItems(SalesItemsDTO salesItemsDTO, Product product, StorageCenter storageCenter, Discount discount, Double discountValue) {
+    public SalesItems(SalesItemsDTO salesItemsDTO, Product product, Sale sale, StorageCenter storageCenter) {
         this.product = product;
-        this.subTotal = Objects.equals(discount, Discount.DECIMAL.name()) ? ((product.getPrice() - discountValue) * salesItemsDTO.getQuantity()) : ((product.getPrice() - product.getPrice() / 100 * discountValue) * salesItemsDTO.getQuantity());
-        this.discount = Discount.valueOf(discount.name());
-        this.prodValue = product.getPrice();
         this.qnt = salesItemsDTO.getQuantity();
+        this.sale = sale;
         this.storageCenter = storageCenter;
+        this.discount = Discount.valueOf(salesItemsDTO.getDiscountType());
+        this.prodValue = product.getPrice();
+        this.subTotal = calcSubTotal(discount, product.getPrice(), salesItemsDTO.getDiscountValue(), salesItemsDTO.getQuantity());
+
+    }
+
+
+    private Double calcSubTotal(Discount discount, Double price, Double value, Long quantity) {
+        double subTotal = 0.0;
+        if(discount.name().equals("DECIMAL")) {
+            subTotal = (price - value) * quantity;
+        } else if (discount.name().equals("PERCENTAGE")) {
+            subTotal = (price - (price/100 * value)) * quantity;
+        }
+        return subTotal;
     }
 
     public Long getId() {

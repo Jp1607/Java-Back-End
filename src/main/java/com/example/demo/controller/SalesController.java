@@ -1,8 +1,10 @@
 package com.example.demo.controller;
+
 import com.example.demo.Enum.Activity;
 import com.example.demo.Enum.Discount;
 import com.example.demo.Enum.Flow;
 import com.example.demo.Enum.Payment;
+import com.example.demo.dto.ReturnProdInfo;
 import com.example.demo.dto.SalesItemsDTO;
 import com.example.demo.entities.*;
 import com.example.demo.repository.*;
@@ -14,9 +16,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Date;
+import java.util.Objects;
 
 @RestController
 @RequestMapping(value = "/sale")
@@ -46,7 +50,24 @@ public class SalesController {
     @Autowired
     private HttpSessionService httpSessionService;
 
-    @GetMapping(value = "sell", produces = "text/plain")
+    private Sale sale;
+    private List<SalesItems> salesItems;
+
+    @PostMapping(value = "/start", produces = "text/plain")
+    public void start(@RequestHeader("Authorization") String token) {
+        Date date = new Date();
+        HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
+        User user = new User();
+        user.setId(http.getUserDetails().getId());
+        sale = new Sale();
+        saleRepository.save(sale);
+        sale.setDate(date);
+        sale.setUser(user);
+        salesItems = new ArrayList<>();
+
+    }
+
+    @GetMapping(value = "", produces = "text/plain")
     public ResponseEntity<String> listStorages(@RequestParam(value = "prodId") Long prodId) {
         String body = "";
         HttpStatus status = null;
@@ -58,57 +79,121 @@ public class SalesController {
                 StorageCenter tempStorage = storageRepository.findById(storageControl.getStorageId()).get();
                 storageCenters.add(tempStorage);
             }
-           body = mapper.writeValueAsString(storageCenters);
+            body = mapper.writeValueAsString(storageCenters);
             status = HttpStatus.OK;
         } catch (Exception e) {
             e.printStackTrace();
+            body = e.getMessage();
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
         }
         return ResponseEntity.status(status).body(body);
     }
 
+    @PostMapping(value = "/add", produces = "text/plain")
+    public ResponseEntity<String> addProduct(@RequestBody SalesItemsDTO salesItemsDTO) {
+
+        HttpStatus status;
+        String body;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
+            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
+            SalesItems salesItems1 = new SalesItems(salesItemsDTO, product, sale, storageCenter);
+            StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(product.getId(), storageCenter.getId());
+            System.out.println(salesItems);
+            System.out.println(salesItems1);
+            salesItems.add(salesItems1);
+            if (salesItemsDTO.getQuantity() > storageControl.getQnt() && product.getNegativeStock().compareTo(0) == 0) {
+                return ResponseEntity.status(200).body("Sem produtos suficientes no estoque.");
+            }
+            int returnQnt = 0;
+            double subTotal = 0;
+            double total = 0;
+            for (SalesItems salesItem : salesItems) {
+                returnQnt += salesItem.getQnt();
+                subTotal += (salesItem.getProdValue() * salesItem.getQnt());
+                total += salesItem.getSubTotal();
+                sale.setTotal(sale.getTotal() + salesItem.getSubTotal());
+            }
+            ReturnProdInfo returnProdInfo = new ReturnProdInfo(salesItems1.getId(), returnQnt, subTotal, total);
+            status = HttpStatus.OK;
+            body = mapper.writeValueAsString(returnProdInfo);
+        } catch (Exception e) {
+            e.printStackTrace();
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            body = e.getClass().getName();
+        }
+
+        return ResponseEntity.status(status.value()).body(body);
+    }
+
+    @PostMapping(value = "/remove", produces = "text/plain")
+    public ResponseEntity removeProduct(@RequestParam(value = "saleItemId") Long id) {
+
+        HttpStatus status;
+        String body;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            salesItems.removeIf(salesItems1 -> salesItems1.getId().compareTo(id) == 0);
+            int returnQnt = 0;
+            double subTotal = 0;
+            double total = 0;
+            for (SalesItems salesItem : salesItems) {
+                returnQnt += salesItem.getQnt();
+                subTotal += (salesItem.getProdValue() * salesItem.getQnt());
+                total += salesItem.getSubTotal();
+            }
+            ReturnProdInfo returnProdInfo = new ReturnProdInfo(returnQnt, subTotal, total);
+            status = HttpStatus.OK;
+            body = mapper.writeValueAsString(returnProdInfo);
+        } catch (Exception e) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            body = e.getMessage();
+        }
+        return ResponseEntity.status(status.value()).body(body);
+    }
+
+    @PostMapping(value = "clean")
+    public ResponseEntity<String> cleanAllProducts() {
+        HttpStatus status;
+        String body;
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            salesItems.clear();
+            ReturnProdInfo returnProdInfo = new ReturnProdInfo(0, 0, 0);
+            status = HttpStatus.OK;
+            body = mapper.writeValueAsString(returnProdInfo);
+        } catch (Exception e) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            body = e.getMessage();
+        }
+        return ResponseEntity.status(status.value()).body(body);
+    }
+
     @PostMapping(value = "/sell", produces = "text/plain")
     public ResponseEntity<String> sell(@RequestHeader("Authorization") String token,
-                                       @RequestBody ArrayList<SalesItemsDTO> salesItemsListDTO,
-                                       @RequestParam(value = "discount") Discount discount,
-                                       @RequestParam(value = "discountValue") Double discountValue,
                                        @RequestParam(value = "payment") Payment payment) {
 
         try {
-            System.out.println("Lista: " + salesItemsListDTO);
             Date date = new Date();
-            HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
-            User user = new User();
-            user.setId(http.getUserDetails().getId());
-
-            Sale sale = new Sale(date, payment, user);
-            double saleTotal = 0;
-            sale = saleRepository.save(sale);
-            for (SalesItemsDTO salesItemsDTO : salesItemsListDTO) {
-                Product p = productRepository.findById(salesItemsDTO.getProductId()).get();
-                StorageCenter s = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
-                if (p.getCurrentStock().compareTo(salesItemsDTO.getQuantity()) < 0 && p.getNegativeStock().compareTo(0) == 0) {
-                    return ResponseEntity.status(200).body("Sem produtos suficientes no estoque");
+            sale.setPayment(payment);
+            for (SalesItems salesItem : salesItems) {
+                Product p = salesItem.getProd();
+                StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(salesItem.getProd().getId(), salesItem.getStorageCenter().getId());
+                if (p.getNegativeStock().compareTo(0) == 0 && Objects.equals(storageControl.getQnt(), salesItem.getQnt())) {
+                    storageCtrlRepository.delete(storageControl);
                 } else {
-                    StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(salesItemsDTO.getProductId(), salesItemsDTO.getStorageCenterId());
-                    if(p.getNegativeStock().compareTo(0) == 0 && storageControl.getQnt() <= salesItemsDTO.getQuantity()) {
-                        storageCtrlRepository.delete(storageControl);
-                    } else {
-                        storageControl.setQnt(storageControl.getQnt() - salesItemsDTO.getQuantity());
-                    }
-                    SalesItems salesItems = new SalesItems(salesItemsDTO, p, s, discount, discountValue);
-                    StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), p, date, Flow.EXIT, salesItems.getQnt());
-                    saleTotal += salesItems.getSubTotal();
-                    salesItems.setSales(sale);
-                    stockFlowRepository.save(stockFlow);
-                    salesItems.setDiscount(discount);
-                    salesItemsRepository.save(salesItems);
-                    p.setCurrentStock(p.getCurrentStock() - salesItems.getQnt());
-                    productRepository.save(p);
-                    logService.save(token, Activity.SELL, "stock_flow", null);
+                    storageControl.setQnt(storageControl.getQnt() - salesItem.getQnt());
                 }
+                StockFlow stockFlow = new StockFlow(salesItem.getStorageCenter(), p, date, Flow.EXIT, salesItem.getQnt());
+                stockFlowRepository.save(stockFlow);
+                salesItemsRepository.save(salesItem);
+                p.setCurrentStock(p.getCurrentStock() - salesItem.getQnt());
+                productRepository.save(p);
+                logService.save(token, Activity.SELL, "stock_flow", null);
             }
-            sale.setTotal(saleTotal);
             saleRepository.save(sale);
+            salesItems.clear();
             return ResponseEntity.status(200).body("Sucesso!");
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -128,15 +213,15 @@ public class SalesController {
             User user = new User();
             user.setId(http.getUserDetails().getId());
             StorageControl storageCtrl = storageCtrlRepository.findByProdIdAndStorageId(salesItemsDTO.getProductId(), salesItemsDTO.getStorageCenterId());
-if(storageCtrl == null){
-    StorageControl storageControl = new StorageControl(salesItemsDTO.getProductId(), salesItemsDTO.getStorageCenterId(), salesItemsDTO.getQuantity());
-    storageCtrlRepository.save(storageControl);
-} else {
-    storageCtrl.setQnt(storageCtrl.getQnt() + salesItemsDTO.getQuantity());
-    storageCtrlRepository.save(storageCtrl);
-}
+            if (storageCtrl == null) {
+                StorageControl storageControl = new StorageControl(salesItemsDTO.getProductId(), salesItemsDTO.getStorageCenterId(), salesItemsDTO.getQuantity());
+                storageCtrlRepository.save(storageControl);
+            } else {
+                storageCtrl.setQnt(storageCtrl.getQnt() + salesItemsDTO.getQuantity());
+                storageCtrlRepository.save(storageCtrl);
+            }
 
-SalesItems salesItems = new SalesItems();
+            SalesItems salesItems = new SalesItems();
             StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), product, date, Flow.ENTRANCE, salesItems.getQnt());
             stockFlowRepository.save(stockFlow);
             product.setCurrentStock(product.getCurrentStock() + salesItems.getQnt());

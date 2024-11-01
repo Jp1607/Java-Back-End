@@ -23,7 +23,7 @@ public class Sale {
     private Date date;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "sale_type", columnDefinition = "varchar(50)", length = 50, nullable = false)
+    @Column(name = "sale_type", columnDefinition = "varchar(50)", length = 50, nullable = true)
     private Payment payment;
 
     @Column(name = "exclude")
