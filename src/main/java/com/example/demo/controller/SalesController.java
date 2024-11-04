@@ -50,154 +50,173 @@ public class SalesController {
     @Autowired
     private HttpSessionService httpSessionService;
 
-    private Sale sale;
-    private List<SalesItems> salesItems;
-
-    @PostMapping(value = "/start", produces = "text/plain")
-    public void start(@RequestHeader("Authorization") String token) {
-        Date date = new Date();
-        HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
-        User user = new User();
-        user.setId(http.getUserDetails().getId());
-        sale = new Sale();
-        saleRepository.save(sale);
-        sale.setDate(date);
-        sale.setUser(user);
-        salesItems = new ArrayList<>();
-
+    public SalesController() {
+        System.out.println(" fui criado ");
     }
 
-    @GetMapping(value = "", produces = "text/plain")
-    public ResponseEntity<String> listStorages(@RequestParam(value = "prodId") Long prodId) {
-        String body = "";
-        HttpStatus status = null;
-        try {
-            ObjectMapper mapper = new ObjectMapper();
-            List<StorageControl> storageControls = storageCtrlRepository.findByProdId(prodId);
-            List<StorageCenter> storageCenters = new ArrayList<>();
-            for (StorageControl storageControl : storageControls) {
-                StorageCenter tempStorage = storageRepository.findById(storageControl.getStorageId()).get();
-                storageCenters.add(tempStorage);
-            }
-            body = mapper.writeValueAsString(storageCenters);
-            status = HttpStatus.OK;
-        } catch (Exception e) {
-            e.printStackTrace();
-            body = e.getMessage();
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-        }
-        return ResponseEntity.status(status).body(body);
-    }
-
-    @PostMapping(value = "/add", produces = "text/plain")
-    public ResponseEntity<String> addProduct(@RequestBody SalesItemsDTO salesItemsDTO) {
-
-        HttpStatus status;
-        String body;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
-            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
-            SalesItems salesItems1 = new SalesItems(salesItemsDTO, product, sale, storageCenter);
-            StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(product.getId(), storageCenter.getId());
-            System.out.println(salesItems);
-            System.out.println(salesItems1);
-            salesItems.add(salesItems1);
-            if (salesItemsDTO.getQuantity() > storageControl.getQnt() && product.getNegativeStock().compareTo(0) == 0) {
-                return ResponseEntity.status(200).body("Sem produtos suficientes no estoque.");
-            }
-            int returnQnt = 0;
-            double subTotal = 0;
-            double total = 0;
-            for (SalesItems salesItem : salesItems) {
-                returnQnt += salesItem.getQnt();
-                subTotal += (salesItem.getProdValue() * salesItem.getQnt());
-                total += salesItem.getSubTotal();
-                sale.setTotal(sale.getTotal() + salesItem.getSubTotal());
-            }
-            ReturnProdInfo returnProdInfo = new ReturnProdInfo(salesItems1.getId(), returnQnt, subTotal, total);
-            status = HttpStatus.OK;
-            body = mapper.writeValueAsString(returnProdInfo);
-        } catch (Exception e) {
-            e.printStackTrace();
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            body = e.getClass().getName();
-        }
-
-        return ResponseEntity.status(status.value()).body(body);
-    }
-
-    @PostMapping(value = "/remove", produces = "text/plain")
-    public ResponseEntity removeProduct(@RequestParam(value = "saleItemId") Long id) {
-
-        HttpStatus status;
-        String body;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            salesItems.removeIf(salesItems1 -> salesItems1.getId().compareTo(id) == 0);
-            int returnQnt = 0;
-            double subTotal = 0;
-            double total = 0;
-            for (SalesItems salesItem : salesItems) {
-                returnQnt += salesItem.getQnt();
-                subTotal += (salesItem.getProdValue() * salesItem.getQnt());
-                total += salesItem.getSubTotal();
-            }
-            ReturnProdInfo returnProdInfo = new ReturnProdInfo(returnQnt, subTotal, total);
-            status = HttpStatus.OK;
-            body = mapper.writeValueAsString(returnProdInfo);
-        } catch (Exception e) {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            body = e.getMessage();
-        }
-        return ResponseEntity.status(status.value()).body(body);
-    }
-
-    @PostMapping(value = "clean")
-    public ResponseEntity<String> cleanAllProducts() {
-        HttpStatus status;
-        String body;
-        ObjectMapper mapper = new ObjectMapper();
-        try {
-            salesItems.clear();
-            ReturnProdInfo returnProdInfo = new ReturnProdInfo(0, 0, 0);
-            status = HttpStatus.OK;
-            body = mapper.writeValueAsString(returnProdInfo);
-        } catch (Exception e) {
-            status = HttpStatus.INTERNAL_SERVER_ERROR;
-            body = e.getMessage();
-        }
-        return ResponseEntity.status(status.value()).body(body);
-    }
+    //    private Sale sale;
+//    private List<SalesItems> salesItems;
+//
+//    @PostMapping(value = "/start", produces = "text/plain")
+//    public void start(@RequestHeader("Authorization") String token) {
+//        Date date = new Date();
+//        HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
+//        User user = new User();
+//        user.setId(http.getUserDetails().getId());
+//        sale = new Sale();
+//        saleRepository.save(sale);
+//        sale.setDate(date);
+//        sale.setUser(user);
+//        salesItems = new ArrayList<>();
+//
+//    }
+//
+//    @GetMapping(value = "", produces = "text/plain")
+//    public ResponseEntity<String> listStorages(@RequestParam(value = "prodId") Long prodId) {
+//        String body = "";
+//        HttpStatus status = null;
+//        try {
+//            ObjectMapper mapper = new ObjectMapper();
+//            List<StorageControl> storageControls = storageCtrlRepository.findByProdId(prodId);
+//            List<StorageCenter> storageCenters = new ArrayList<>();
+//            for (StorageControl storageControl : storageControls) {
+//                StorageCenter tempStorage = storageRepository.findById(storageControl.getStorageId()).get();
+//                storageCenters.add(tempStorage);
+//            }
+//            body = mapper.writeValueAsString(storageCenters);
+//            status = HttpStatus.OK;
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            body = e.getMessage();
+//            status = HttpStatus.INTERNAL_SERVER_ERROR;
+//        }
+//        return ResponseEntity.status(status).body(body);
+//    }
+//
+//    @PostMapping(value = "/add", produces = "text/plain")
+//    public ResponseEntity<String> addProduct(@RequestBody SalesItemsDTO salesItemsDTO) {
+//
+//        HttpStatus status;
+//        String body;
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
+//            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
+//            SalesItems salesItems1 = new SalesItems(salesItemsDTO, product, sale, storageCenter);
+//            StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(product.getId(), storageCenter.getId());
+//            salesItems.add(salesItems1);
+//            if (salesItemsDTO.getQuantity() > storageControl.getQnt() && product.getNegativeStock().compareTo(0) == 0) {
+//                return ResponseEntity.status(200).body("Sem produtos suficientes no estoque.");
+//            }
+//            int returnQnt = 0;
+//            double subTotal = 0;
+//            double total = 0;
+//            for (SalesItems salesItem : salesItems) {
+//                returnQnt += salesItem.getQnt();
+//                subTotal += (salesItem.getProdValue() * salesItem.getQnt());
+//                total += salesItem.getSubTotal();
+//                sale.setTotal(sale.getTotal() + salesItem.getSubTotal());
+//            }
+//            ReturnProdInfo returnProdInfo = new ReturnProdInfo(salesItems1.getId(), returnQnt, subTotal, total);
+//            status = HttpStatus.OK;
+//            body = mapper.writeValueAsString(returnProdInfo);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            status = HttpStatus.INTERNAL_SERVER_ERROR;
+//            body = e.getClass().getName();
+//        }
+//
+//        return ResponseEntity.status(status.value()).body(body);
+//    }
+//
+//    @PostMapping(value = "/remove", produces = "text/plain")
+//    public ResponseEntity removeProduct(@RequestParam(value = "saleItemId") Long id) {
+//
+//        HttpStatus status;
+//        String body;
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            salesItems.removeIf(salesItems1 -> salesItems1.getId().compareTo(id) == 0);
+//            int returnQnt = 0;
+//            double subTotal = 0;
+//            double total = 0;
+//            for (SalesItems salesItem : salesItems) {
+//                returnQnt += salesItem.getQnt();
+//                subTotal += (salesItem.getProdValue() * salesItem.getQnt());
+//                total += salesItem.getSubTotal();
+//            }
+//            ReturnProdInfo returnProdInfo = new ReturnProdInfo(returnQnt, subTotal, total);
+//            status = HttpStatus.OK;
+//            body = mapper.writeValueAsString(returnProdInfo);
+//        } catch (Exception e) {
+//            status = HttpStatus.INTERNAL_SERVER_ERROR;
+//            body = e.getMessage();
+//        }
+//        return ResponseEntity.status(status.value()).body(body);
+//    }
+//
+//    @PostMapping(value = "clean")
+//    public ResponseEntity<String> cleanAllProducts() {
+//        HttpStatus status;
+//        String body;
+//        ObjectMapper mapper = new ObjectMapper();
+//        try {
+//            salesItems.clear();
+//            ReturnProdInfo returnProdInfo = new ReturnProdInfo(0, 0, 0);
+//            status = HttpStatus.OK;
+//            body = mapper.writeValueAsString(returnProdInfo);
+//        } catch (Exception e) {
+//            status = HttpStatus.INTERNAL_SERVER_ERROR;
+//            body = e.getMessage();
+//        }
+//        return ResponseEntity.status(status.value()).body(body);
+//    }
 
     @PostMapping(value = "/sell", produces = "text/plain")
     public ResponseEntity<String> sell(@RequestHeader("Authorization") String token,
+                                       @RequestBody ArrayList<SalesItemsDTO> salesItemsListDTO,
                                        @RequestParam(value = "payment") Payment payment) {
-
+HttpStatus status;
+String body;
         try {
             Date date = new Date();
+            HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
+            User user = new User();
+            user.setId(http.getUserDetails().getId());
+            Sale sale = new Sale();
+            sale.setDate(date);
+            sale.setUser(user);
             sale.setPayment(payment);
-            for (SalesItems salesItem : salesItems) {
-                Product p = salesItem.getProd();
-                StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(salesItem.getProd().getId(), salesItem.getStorageCenter().getId());
-                if (p.getNegativeStock().compareTo(0) == 0 && Objects.equals(storageControl.getQnt(), salesItem.getQnt())) {
+            sale = saleRepository.save(sale);
+            Double total = 0.0;
+            for (SalesItemsDTO salesItemDTO : salesItemsListDTO) {
+                Product p = productRepository.findById(salesItemDTO.getProductId()).get();
+                StorageCenter s = storageRepository.findById(salesItemDTO.getStorageCenterId()).get();
+                SalesItems salesItems = new SalesItems(salesItemDTO, p, sale, s);
+                StockFlow stockFlow = new StockFlow(s, p, date, Flow.EXIT, salesItemDTO.getQuantity());
+                stockFlowRepository.save(stockFlow);
+                salesItemsRepository.save(salesItems);
+                p.setCurrentStock(p.getCurrentStock() - salesItems.getQnt());
+                productRepository.save(p);
+                total += (salesItems.getSubTotal());
+                StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(p.getId(), s.getId());
+                if (p.getNegativeStock().compareTo(0) == 0 && Objects.equals(storageControl.getQnt(), salesItemDTO.getQuantity())) {
                     storageCtrlRepository.delete(storageControl);
                 } else {
-                    storageControl.setQnt(storageControl.getQnt() - salesItem.getQnt());
+                    storageControl.setQnt(storageControl.getQnt() - salesItemDTO.getQuantity());
                 }
-                StockFlow stockFlow = new StockFlow(salesItem.getStorageCenter(), p, date, Flow.EXIT, salesItem.getQnt());
-                stockFlowRepository.save(stockFlow);
-                salesItemsRepository.save(salesItem);
-                p.setCurrentStock(p.getCurrentStock() - salesItem.getQnt());
-                productRepository.save(p);
-                logService.save(token, Activity.SELL, "stock_flow", null);
             }
+            sale.setTotal(total);
             saleRepository.save(sale);
-            salesItems.clear();
-            return ResponseEntity.status(200).body("Sucesso!");
+            logService.save(token, Activity.SELL, "sale", sale.getId());
+            status = HttpStatus.OK;
+            body = "sucesso";
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            body = e.getMessage();
         }
+            return ResponseEntity.status(status.value()).body(body);
     }
 
     @PostMapping(value = "/buy", produces = "text/plain")
