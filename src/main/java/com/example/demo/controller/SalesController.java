@@ -71,27 +71,27 @@ public class SalesController {
 //
 //    }
 //
-//    @GetMapping(value = "", produces = "text/plain")
-//    public ResponseEntity<String> listStorages(@RequestParam(value = "prodId") Long prodId) {
-//        String body = "";
-//        HttpStatus status = null;
-//        try {
-//            ObjectMapper mapper = new ObjectMapper();
-//            List<StorageControl> storageControls = storageCtrlRepository.findByProdId(prodId);
-//            List<StorageCenter> storageCenters = new ArrayList<>();
-//            for (StorageControl storageControl : storageControls) {
-//                StorageCenter tempStorage = storageRepository.findById(storageControl.getStorageId()).get();
-//                storageCenters.add(tempStorage);
-//            }
-//            body = mapper.writeValueAsString(storageCenters);
-//            status = HttpStatus.OK;
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//            body = e.getMessage();
-//            status = HttpStatus.INTERNAL_SERVER_ERROR;
-//        }
-//        return ResponseEntity.status(status).body(body);
-//    }
+    @GetMapping(value = "", produces = "application/json")
+    public ResponseEntity<String> listStorages(@RequestParam(value = "prodId") Long prodId) {
+        String body = "";
+        HttpStatus status = null;
+        try {
+            ObjectMapper mapper = new ObjectMapper();
+            List<StorageControl> storageControls = storageCtrlRepository.findByProdId(prodId);
+            List<StorageCenter> storageCenters = new ArrayList<>();
+            for (StorageControl storageControl : storageControls) {
+                StorageCenter tempStorage = storageRepository.findById(storageControl.getStorageId()).get();
+                storageCenters.add(tempStorage);
+            }
+            body = mapper.writeValueAsString(storageCenters);
+            status = HttpStatus.OK;
+        } catch (Exception e) {
+            e.printStackTrace();
+            body = e.getMessage();
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+        }
+        return ResponseEntity.status(status).body(body);
+    }
 //
 //    @PostMapping(value = "/add", produces = "text/plain")
 //    public ResponseEntity<String> addProduct(@RequestBody SalesItemsDTO salesItemsDTO) {

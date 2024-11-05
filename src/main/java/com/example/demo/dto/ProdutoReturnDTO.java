@@ -33,7 +33,7 @@ public class ProdutoReturnDTO extends DefaultDTO {
     private Double price;
 
     @JsonView
-    private String negativeStock;
+    private Boolean negativeStock;
 
     public ProdutoReturnDTO(Product p) {
         this.id = p.getId();
@@ -65,7 +65,7 @@ public class ProdutoReturnDTO extends DefaultDTO {
         this.price = p.getPrice();
         this.currentStock = p.getCurrentStock();
         if (p.getNegativeStock() != null) {
-            this.negativeStock = p.getNegativeStock().compareTo(1) == 0 ? "Permite" : "Não permite";
+            this.negativeStock = p.getNegativeStock().compareTo(1) == 0;
         }
     }
 
