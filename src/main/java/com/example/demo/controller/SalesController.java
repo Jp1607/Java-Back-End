@@ -4,6 +4,7 @@ import com.example.demo.Enum.Activity;
 import com.example.demo.Enum.Discount;
 import com.example.demo.Enum.Flow;
 import com.example.demo.Enum.Payment;
+import com.example.demo.dto.BuyItemDTO;
 import com.example.demo.dto.ReturnProdInfo;
 import com.example.demo.dto.SalesItemsDTO;
 import com.example.demo.entities.*;
@@ -176,8 +177,8 @@ public class SalesController {
     public ResponseEntity<String> sell(@RequestHeader("Authorization") String token,
                                        @RequestBody ArrayList<SalesItemsDTO> salesItemsListDTO,
                                        @RequestParam(value = "payment") Payment payment) {
-HttpStatus status;
-String body;
+        HttpStatus status;
+        String body;
         try {
             Date date = new Date();
             HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
@@ -216,40 +217,42 @@ String body;
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             body = e.getMessage();
         }
-            return ResponseEntity.status(status.value()).body(body);
+        return ResponseEntity.status(status.value()).body(body);
     }
 
     @PostMapping(value = "/buy", produces = "text/plain")
     public ResponseEntity<String> buy(@RequestHeader("Authorization") String token,
-                                      @RequestBody SalesItemsDTO salesItemsDTO) {
-
+                                      @RequestBody ArrayList<BuyItemDTO> buyItemDTOS) {
+        HttpStatus status;
+        String body;
         try {
-            Product product = productRepository.findById(salesItemsDTO.getProductId()).get();
-            StorageCenter storageCenter = storageRepository.findById(salesItemsDTO.getStorageCenterId()).get();
-
             Date date = new Date();
             HttpSessionParam http = httpSessionService.getHttpSessionParam(token.split(" ")[1]);
             User user = new User();
             user.setId(http.getUserDetails().getId());
-            StorageControl storageCtrl = storageCtrlRepository.findByProdIdAndStorageId(salesItemsDTO.getProductId(), salesItemsDTO.getStorageCenterId());
-            if (storageCtrl == null) {
-                StorageControl storageControl = new StorageControl(salesItemsDTO.getProductId(), salesItemsDTO.getStorageCenterId(), salesItemsDTO.getQuantity());
-                storageCtrlRepository.save(storageControl);
-            } else {
-                storageCtrl.setQnt(storageCtrl.getQnt() + salesItemsDTO.getQuantity());
-                storageCtrlRepository.save(storageCtrl);
+            for (BuyItemDTO saleItemDTO : buyItemDTOS) {
+                Product p = productRepository.findById(saleItemDTO.getProductId()).get();
+                StorageCenter storageCenter = storageRepository.findById(saleItemDTO.getStorageCenterId()).get();
+                p.setCurrentStock(p.getCurrentStock() + saleItemDTO.getQuantity());
+                productRepository.save(p);
+                StorageControl storageControl = storageCtrlRepository.findByProdIdAndStorageId(p.getId(), saleItemDTO.getStorageCenterId());
+                if (storageControl == null) {
+                   StorageControl storageControl1 = new StorageControl(p.getId(), saleItemDTO.getStorageCenterId(), saleItemDTO.getQuantity());
+                storageCtrlRepository.save(storageControl1);
+                } else {
+                    storageControl.setQnt(storageControl.getQnt() + saleItemDTO.getQuantity());
+                    storageCtrlRepository.save(storageControl);
+                }
+                StockFlow stockFlow = new StockFlow(storageCenter, p, date, Flow.ENTRANCE, saleItemDTO.getQuantity());
+                stockFlowRepository.save(stockFlow);
             }
-
-            SalesItems salesItems = new SalesItems();
-            StockFlow stockFlow = new StockFlow(salesItems.getStorageCenter(), product, date, Flow.ENTRANCE, salesItems.getQnt());
-            stockFlowRepository.save(stockFlow);
-            product.setCurrentStock(product.getCurrentStock() + salesItems.getQnt());
-            productRepository.save(product);
-            logService.save(token, Activity.BUY, "stock_flow", null);
-            return ResponseEntity.status(200).body("Sucesso");
-
+            status = HttpStatus.OK;
+            body = "sucesso";
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            e.printStackTrace();
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            body = e.getMessage();
         }
+        return ResponseEntity.status(status.value()).body(body);
     }
 }
